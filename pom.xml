@@ -142,9 +142,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
-                <configuration>
-<!--                    <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/coverage-reports/jacoco.exec</argLine>-->
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
