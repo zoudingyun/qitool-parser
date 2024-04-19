@@ -32,7 +32,7 @@ public class BaseDataTypeUtil {
 
 
     /**
-     * byte数据组转Hex字符串
+     * byteHex字符串转数据组
      * @param hex hex字符串
      * @return 转换后的byte数组
      * */
