@@ -12,6 +12,8 @@ import static org.qitool.parser.common.CommonVariable.*;
  */
 public class BaseDataTypeUtil {
 
+    private BaseDataTypeUtil() {}
+
     /**
      * byte数据组转Hex字符串
      * @param bytes byte数组
@@ -32,7 +34,7 @@ public class BaseDataTypeUtil {
 
 
     /**
-     * byteHex字符串转数据组
+     * Hex字符串转byte数据组
      * @param hex hex字符串
      * @return 转换后的byte数组
      * */

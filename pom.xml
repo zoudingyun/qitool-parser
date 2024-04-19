@@ -163,6 +163,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <!--输出报告目录-->
                     <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                 </configuration>
             </plugin>
