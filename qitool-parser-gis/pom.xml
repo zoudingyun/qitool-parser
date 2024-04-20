@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.qitool.parser</groupId>
+        <artifactId>qitool-parser-parent</artifactId>
+        <version>0.0.1</version>
+    </parent>
+
+    <artifactId>qitool-parser-gis</artifactId>
+    <packaging>jar</packaging>
+    <description>qitool-parser GIS处理工具</description>
+
+    <properties>
+    </properties>
+
+    <dependencies>
+        <!--公共模块-->
+        <dependency>
+            <groupId>org.qitool.parser</groupId>
+            <artifactId>qitool-parser-common</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!--通用工具-->
+        <dependency>
+            <groupId>org.qitool.parser</groupId>
+            <artifactId>qitool-parser-general</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <!-- 单元测试 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+
+</project>

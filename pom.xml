@@ -16,6 +16,7 @@
     <modules>
         <module>qitool-parser-general</module>
         <module>qitool-parser-common</module>
+        <module>qitool-parser-gis</module>
     </modules>
 
     <properties>
