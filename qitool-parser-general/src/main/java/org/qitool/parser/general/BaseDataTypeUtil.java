@@ -14,6 +14,19 @@ public class BaseDataTypeUtil {
 
     private BaseDataTypeUtil() {}
 
+
+    /**
+     * byte数据转Hex字符串
+     * @param byteData byte数据
+     * @return 转换后的hex字符串
+     * */
+    public static String bytesToHexString(byte byteData) {
+        byte[] bytes = new byte[1];
+        bytes[0] = byteData;
+        return bytesToHexString(bytes);
+    }
+
+
     /**
      * byte数据组转Hex字符串
      * @param bytes byte数组
