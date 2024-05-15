@@ -1,7 +1,5 @@
 package org.qitool.parser.protocol.auto.GBT32960.domain;
 
-import java.util.Date;
-
 /**
  * 数据单元
  *
@@ -11,28 +9,16 @@ import java.util.Date;
 public class DataUnit {
 
     /**
-     * 数据采集时间
+     * 实时信息上报数据
      * */
-    private Date dataTime;
+    DataUnitDataRealTimeData realTimeData;
 
-    /**
-     * 数据采集时间字符串
-     * */
-    private String dataTimeDesc;
 
-    public Date getDataTime() {
-        return dataTime;
+    public DataUnitDataRealTimeData getRealTimeData() {
+        return realTimeData;
     }
 
-    public void setDataTime(Date dataTime) {
-        this.dataTime = dataTime;
-    }
-
-    public String getDataTimeDesc() {
-        return dataTimeDesc;
-    }
-
-    public void setDataTimeDesc(String dataTimeDesc) {
-        this.dataTimeDesc = dataTimeDesc;
+    public void setRealTimeData(DataUnitDataRealTimeData realTimeData) {
+        this.realTimeData = realTimeData;
     }
 }

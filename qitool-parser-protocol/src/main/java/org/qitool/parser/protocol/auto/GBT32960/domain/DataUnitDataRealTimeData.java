@@ -8,7 +8,7 @@ import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.AutoStatisticsData
  * @author zoudingyun
  * 2024/5/14 15:18
  */
-public class DataUnitRealTimeData extends DataUnit {
+public class DataUnitDataRealTimeData extends DataUnitData {
 
     /**
      * 整车数据部分

@@ -5,7 +5,7 @@ import org.qitool.parser.general.BaseDataTypeUtil;
 import org.qitool.parser.protocol.auto.GBT32960.domain.AutoData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.CommandUnit;
 import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnit;
-import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnitRealTimeData;
+import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnitDataRealTimeData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.AutoStatisticsData;
 import org.qitool.parser.protocol.auto.GBT32960.enums.*;
 import org.qitool.parser.protocol.auto.GBT32960.exceptions.*;
@@ -57,9 +57,7 @@ public class GBT32960Util {
         // 数据单元长度
         autoData.setDataUnitLength(formatDataUnitLength(gbt32960Bytes));
         // 数据单元
-        autoData.setDataUnit(formatDataUnit(gbt32960Bytes,autoData.getDataUnitLength(),autoData.getCommandUnit(),autoData.getEncryptionType()));
-
-
+        autoData.setDataUnit(formatDataUnit(gbt32960Bytes,autoData.getDataUnitLength(),autoData.getCommandUnit(),new DataUnit(),autoData.getEncryptionType()));
         return autoData;
     }
 
@@ -242,11 +240,12 @@ public class GBT32960Util {
      * 格式化：数据单元
      * @param gbt32960Bytes 报文数据
      * @param commandUnit 命令单元
+     * @param dataUnit 数据单元
      * @param commandUnitLength 命令单元长度
      * @param encryptionType 加密方式
      * @return 数据单元
      * */
-    private static DataUnit formatDataUnit(byte[] gbt32960Bytes,int commandUnitLength,CommandUnit commandUnit,EncryptionType encryptionType){
+    private static DataUnit formatDataUnit(byte[] gbt32960Bytes, int commandUnitLength, CommandUnit commandUnit, DataUnit dataUnit, EncryptionType encryptionType){
         switch (encryptionType){
             case RAW:{
                 switch (commandUnit.getCommandIdentification()){
@@ -254,7 +253,7 @@ public class GBT32960Util {
                         // 实时信息上报
                         if (commandUnitLength == 0){
                             // 数据长度为0
-                            return null;
+                            return dataUnit;
                         }
                         // 数据单元部分
                         byte[] dataUnitBytes = Arrays.copyOfRange(gbt32960Bytes, 24, gbt32960Bytes.length-1);
@@ -262,7 +261,7 @@ public class GBT32960Util {
                             throw new DataUnitLengthMismatch(dataUnitBytes.length,commandUnitLength);
                         }
                         // 开始解析数据
-                        DataUnitRealTimeData realTimeData = new DataUnitRealTimeData();
+                        DataUnitDataRealTimeData realTimeData = new DataUnitDataRealTimeData();
                         // ============================================时间部分(6字节)===================================//
                         String dateTimeStr = getTimeString(dataUnitBytes);
                         // 定义时间格式
@@ -276,10 +275,10 @@ public class GBT32960Util {
                         // ============================================整车数据===================================//
                         // 从第7个字节开始时数据位
                         analysistRealTimeData(dataUnitBytes,6,realTimeData);
-                        return realTimeData;
+                        dataUnit.setRealTimeData(realTimeData);
                     }
                     default:{
-                        return null;
+                        return dataUnit;
                     }
                 }
             }
@@ -297,7 +296,7 @@ public class GBT32960Util {
      * @param startBytesIndex 单个信息体起始位置（信息类型标志的位置）
      * @return 格式化后的数据单元
      * */
-    private static DataUnitRealTimeData analysistRealTimeData(byte[] dataBytes, int startBytesIndex, DataUnitRealTimeData dataUnit){
+    private static DataUnitDataRealTimeData analysistRealTimeData(byte[] dataBytes, int startBytesIndex, DataUnitDataRealTimeData dataUnit){
         // 判断数据类型
         byte[] dataTypeBytes = Arrays.copyOfRange(dataBytes, startBytesIndex, startBytesIndex+1);
         int dataTypeValue = dataTypeBytes[0] & 0xFF;

@@ -13,7 +13,7 @@ package org.qitool.parser.protocol.auto.GBT32960.domain;
  * @author zoudingyun
  * 2024/5/14 15:18
  */
-public class DataUnitAutoLogin extends DataUnit {
+public class DataUnitDataAutoLogin extends DataUnitData {
 
     /**
      * 登入流水号
