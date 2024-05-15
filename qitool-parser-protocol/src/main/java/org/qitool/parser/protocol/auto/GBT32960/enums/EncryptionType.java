@@ -33,9 +33,10 @@ public enum EncryptionType {
      * */
     INVALID("无效");
 
+    public final String value;
 
-    private EncryptionType(String value){
-
+    EncryptionType(String value){
+        this.value = value;
     }
 
 }

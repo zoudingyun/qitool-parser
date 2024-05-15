@@ -40,9 +40,10 @@ public enum ResponseFlag {
      * */
     COMMAND("命令");
 
+    public final String value;
 
-    private ResponseFlag(String value){
-
+    ResponseFlag(String value){
+        this.value = value;
     }
 
 }

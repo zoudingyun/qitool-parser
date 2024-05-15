@@ -15,4 +15,24 @@ public class DataUnit {
      * */
     private Date dataTime;
 
+    /**
+     * 数据采集时间字符串
+     * */
+    private String dataTimeDesc;
+
+    public Date getDataTime() {
+        return dataTime;
+    }
+
+    public void setDataTime(Date dataTime) {
+        this.dataTime = dataTime;
+    }
+
+    public String getDataTimeDesc() {
+        return dataTimeDesc;
+    }
+
+    public void setDataTimeDesc(String dataTimeDesc) {
+        this.dataTimeDesc = dataTimeDesc;
+    }
 }

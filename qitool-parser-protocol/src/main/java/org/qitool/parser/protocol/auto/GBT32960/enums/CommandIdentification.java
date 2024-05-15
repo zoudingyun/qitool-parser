@@ -73,8 +73,13 @@ public enum CommandIdentification {
      * */
     CUSTOM_DATA_EXCHANGE("平台交换自定义数据");
 
+    /**
+     * 描述值
+     * */
+    public final String value;
 
-    private CommandIdentification(String value) {
+    CommandIdentification(String value) {
+        this.value = value;
     }
 
 }
