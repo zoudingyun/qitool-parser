@@ -2,6 +2,8 @@ package org.qitool.parser.general;
 
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -35,6 +37,14 @@ public class BaseDataTypeUtilTest {
         assertEquals( "0AEC1ED832", BaseDataTypeUtil.bytesToHexString(BaseDataTypeUtil.hexStringToBytes("0AEC1ED832")));
         assertEquals(0,BaseDataTypeUtil.hexStringToBytes("").length );
         assertEquals(0,BaseDataTypeUtil.hexStringToBytes(null).length );
+    }
+
+    /**
+     * 测试字节数组转小数
+     * */
+    @Test
+    void stringToBytesTest() {
+        assertEquals(BaseDataTypeUtil.bytesToBigDecimal(BaseDataTypeUtil.hexStringToBytes("01"),new BigDecimal("0.1")),new BigDecimal("0.1"));
     }
 
 }
