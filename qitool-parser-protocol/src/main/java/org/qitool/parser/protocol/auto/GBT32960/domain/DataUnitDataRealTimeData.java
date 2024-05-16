@@ -2,6 +2,7 @@ package org.qitool.parser.protocol.auto.GBT32960.domain;
 
 import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.AutoStatisticsData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.DriveMotorData;
+import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.PositionData;
 
 import java.util.List;
 
@@ -28,6 +29,11 @@ public class DataUnitDataRealTimeData extends DataUnitData {
      * */
     private List<DriveMotorData> motorData;
 
+    /**
+     * 车辆位置
+     * */
+    private PositionData position;
+
 
     public AutoStatisticsData getAutoStatisticsData() {
         return autoStatisticsData;
@@ -51,5 +57,13 @@ public class DataUnitDataRealTimeData extends DataUnitData {
 
     public void setMotorData(List<DriveMotorData> motorData) {
         this.motorData = motorData;
+    }
+
+    public PositionData getPosition() {
+        return position;
+    }
+
+    public void setPosition(PositionData position) {
+        this.position = position;
     }
 }

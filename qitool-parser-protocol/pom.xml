@@ -42,6 +42,12 @@
             <artifactId>qitool-parser-general</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <!--GIS工具模块-->
+        <dependency>
+            <groupId>org.qitool.parser</groupId>
+            <artifactId>qitool-parser-gis</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
 
     </dependencies>
 

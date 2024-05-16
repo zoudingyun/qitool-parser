@@ -39,6 +39,15 @@ public class CoordinateUtil {
     }
 
     /**
+     * WGS84（地球坐标系） 转 GCJ-02（火星坐标系）
+     * @param wgs84Coordinate 地球坐标数据
+     * @return 转换后的经纬度坐标
+     * */
+    public static LatLongCoordinate wgs84ToGcj02(LatLongCoordinate wgs84Coordinate){
+        return wgs84ToGcj02(wgs84Coordinate.getLongitude(),wgs84Coordinate.getLatitude());
+    }
+
+    /**
      * GCJ-02（火星坐标系） 转 WGS84（地球坐标系）
      * @param longitude 经度
      * @param latitude  纬度
@@ -47,6 +56,15 @@ public class CoordinateUtil {
     public static LatLongCoordinate gcj02ToWgs84(BigDecimal longitude,BigDecimal latitude){
         LatLongCoordinate offsetCoordinate = coordinateOffset(longitude.doubleValue(),latitude.doubleValue(), false);
         return new LatLongCoordinate(longitude.add(offsetCoordinate.getLongitude()), latitude.add(offsetCoordinate.getLatitude()));
+    }
+
+    /**
+     * GCJ-02（火星坐标系） 转 WGS84（地球坐标系）
+     * @param gcjCoordinate 火星坐标
+     * @return 转换后的经纬度坐标
+     * */
+    public static LatLongCoordinate gcj02ToWgs84(LatLongCoordinate gcjCoordinate){
+        return gcj02ToWgs84(gcjCoordinate.getLongitude(),gcjCoordinate.getLatitude());
     }
 
 

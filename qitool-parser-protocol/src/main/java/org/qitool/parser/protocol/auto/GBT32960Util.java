@@ -1,13 +1,17 @@
 package org.qitool.parser.protocol.auto;
 
+import com.sun.istack.internal.NotNull;
 import org.qitool.parser.general.BCCUtil;
 import org.qitool.parser.general.BaseDataTypeUtil;
+import org.qitool.parser.gis.CoordinateUtil;
+import org.qitool.parser.gis.domain.LatLongCoordinate;
 import org.qitool.parser.protocol.auto.GBT32960.domain.AutoData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.CommandUnit;
 import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnit;
 import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnitDataRealTimeData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.AutoStatisticsData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.DriveMotorData;
+import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.PositionData;
 import org.qitool.parser.protocol.auto.GBT32960.enums.*;
 import org.qitool.parser.protocol.auto.GBT32960.exceptions.*;
 
@@ -275,7 +279,7 @@ public class GBT32960Util {
                         realTimeData.setDataTimeDesc(dateTimeStr);
                         realTimeData.setDataTime(java.util.Date.from(dateTime.atZone(java.time.ZoneId.systemDefault()).toInstant()));
 
-                        // ============================================整车数据===================================//
+                        // ============================================实时信息上报===================================//
                         // 从第7个字节开始时数据位
                         analysistRealTimeData(dataUnitBytes,6,realTimeData);
                         dataUnit.setRealTimeData(realTimeData);
@@ -331,11 +335,59 @@ public class GBT32960Util {
                 int dataEndIndex = dataStartIndex+(12*driverCount);
                 // 获取当前数据包数据数组
                 byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataEndIndex);
-                dataUnit.setMotorData(analysistDriveMotorData(thisDataBytes,0,new ArrayList<>(driverCount)));
+                dataUnit.setMotorData(analysisDriveMotorData(thisDataBytes,0,new ArrayList<>(driverCount)));
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
             }
-            case 0x03:
-            case 0x04:
-            case 0x05:
+            case 0x03:{
+                // 燃料电池数据
+                // 温度探针数量
+                int count = BaseDataTypeUtil.bytesToUnsignedBigInteger(Arrays.copyOfRange(dataBytes, dataStartIndex+6, dataStartIndex+8)).intValue();
+                // 数据结束位置
+                int dataEndIndex = dataStartIndex+2+2+2+2+count+2+1+2+1+2+1+1;
+
+                //TODO: 实现燃料电池数据分析
+
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
+            }
+            case 0x04:{
+                // 发动机数据
+                // 数据结束位置
+                int dataEndIndex = dataStartIndex+1+2+2;
+
+                //TODO: 实现发动机数据分析
+
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
+            }
+            case 0x05:{
+                // 车辆定位
+                // 数据结束位置
+                int dataEndIndex = dataStartIndex+1+4+4;
+                // 获取当前数据包数据数组
+                byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataEndIndex);
+                dataUnit.setPosition(analysisPositionData(thisDataBytes));
+
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
+            }
             case 0x06:
             case 0x07:
             default:{
@@ -345,11 +397,49 @@ public class GBT32960Util {
         }
     }
 
+
+    /**
+     * 分析车辆位置
+     * @param dataBytes 车辆位置报文
+     * @return 车辆位置
+     * */
+    private static PositionData analysisPositionData(byte[] dataBytes){
+        PositionData positionData = new PositionData();
+        // 定位状态
+        positionData.setEnabled(!BaseDataTypeUtil.checkBitValue(dataBytes[0],8));
+        // 北纬还是南纬(true 为需要转为北纬)
+        boolean needChangeN = BaseDataTypeUtil.checkBitValue(dataBytes[0],7);
+        // 东经还是西经(true 为需要转为东经)
+        boolean needChangeE = BaseDataTypeUtil.checkBitValue(dataBytes[0],6);
+        // 大地坐标
+        LatLongCoordinate wgs84 = new LatLongCoordinate();
+        // 经度
+        BigDecimal longitude = BaseDataTypeUtil.bytesToBigDecimal(
+                Arrays.copyOfRange(dataBytes, 1, 5)
+                ,new BigDecimal("0.000001")
+        );
+        wgs84.setLongitude(needChangeE?longitude.negate():longitude);
+        // 纬度
+        BigDecimal latitude = BaseDataTypeUtil.bytesToBigDecimal(
+                Arrays.copyOfRange(dataBytes, 5, 9)
+                ,new BigDecimal("0.000001")
+        );
+        wgs84.setLatitude(needChangeN?latitude.negate():latitude);
+        // 地球坐标
+        positionData.setWgs84(wgs84);
+        // 火星坐标
+        positionData.setGcj02(CoordinateUtil.wgs84ToGcj02(wgs84));
+
+        return positionData;
+    }
+
+
     /**
      * 分析驱动电机报文
-     * @param dataBytes 整车数据部分的数据报文
+     * @param dataBytes 驱动电机部分的数据报文
+     * @return 驱动电机部分的数据
      * */
-    private static List<DriveMotorData> analysistDriveMotorData(byte[] dataBytes, int startBytesIndex, List<DriveMotorData> driveMotorDataList){
+    private static List<DriveMotorData> analysisDriveMotorData(byte[] dataBytes, int startBytesIndex, List<DriveMotorData> driveMotorDataList){
         DriveMotorData driveMotorData = new DriveMotorData();
         // 驱动电机序号
         driveMotorData.setOrderNumber(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex]).intValue());
@@ -414,7 +504,7 @@ public class GBT32960Util {
         driveMotorDataList.add(driveMotorData);
         int endIndex = startBytesIndex+12;
         if (endIndex<dataBytes.length){
-            return analysistDriveMotorData(dataBytes,endIndex,driveMotorDataList);
+            return analysisDriveMotorData(dataBytes,endIndex,driveMotorDataList);
         }else {
             return driveMotorDataList;
         }
@@ -605,7 +695,7 @@ public class GBT32960Util {
      * @param dataUnitBytes 数据报文
      * @return 时间字符串
      * */
-    private static String getTimeString(byte[] dataUnitBytes) {
+    private static String getTimeString(@NotNull byte[] dataUnitBytes) {
         byte[] timeBytes = Arrays.copyOfRange(dataUnitBytes, 0, 6);
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
