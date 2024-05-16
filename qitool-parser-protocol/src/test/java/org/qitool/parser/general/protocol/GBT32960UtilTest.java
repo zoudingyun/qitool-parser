@@ -37,6 +37,7 @@ public class GBT32960UtilTest {
         assertEquals(autoData.getDataUnit().getRealTimeData().getDataTimeDesc(),"2024-05-14 18:18:19");
         logger.info(String.format("数据采集时间:%s",autoData.getDataUnit().getRealTimeData().getDataTime()));
         assertEquals(autoData.getDataUnit().getRealTimeData().getDataTime().toString(),"Tue May 14 18:18:19 CST 2024");
+
     }
 
 }

@@ -13,7 +13,6 @@ public class DataUnit {
      * */
     DataUnitDataRealTimeData realTimeData;
 
-
     public DataUnitDataRealTimeData getRealTimeData() {
         return realTimeData;
     }

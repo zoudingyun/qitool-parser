@@ -7,6 +7,7 @@ import org.qitool.parser.protocol.auto.GBT32960.domain.CommandUnit;
 import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnit;
 import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnitDataRealTimeData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.AutoStatisticsData;
+import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.DriveMotorData;
 import org.qitool.parser.protocol.auto.GBT32960.enums.*;
 import org.qitool.parser.protocol.auto.GBT32960.exceptions.*;
 
@@ -15,8 +16,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * GB-T 32960.1-2016 报文工具
@@ -300,11 +303,12 @@ public class GBT32960Util {
         // 判断数据类型
         byte[] dataTypeBytes = Arrays.copyOfRange(dataBytes, startBytesIndex, startBytesIndex+1);
         int dataTypeValue = dataTypeBytes[0] & 0xFF;
+        // 数据起始位置
+        int dataStartIndex = startBytesIndex+1;
         switch (dataTypeValue){
             case 0x01:{
                 // 整车数据
-                // 数据长度
-                int dataStartIndex = startBytesIndex+1;
+                // 数据结束位置
                 int dataEndIndex = dataStartIndex+20;
                 // 获取当前数据包数据数组
                 byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataEndIndex);
@@ -317,7 +321,18 @@ public class GBT32960Util {
                     return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
-            case 0x02:
+            case 0x02:{
+                // 驱动电机数据
+                // 驱动电机数量
+                int driverCount = BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[dataStartIndex]).intValue();
+                dataUnit.setDriveMotorCount(driverCount);
+                dataStartIndex++;
+                // 数据结束位置(每个电机数据体长度为12)
+                int dataEndIndex = dataStartIndex+(12*driverCount);
+                // 获取当前数据包数据数组
+                byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataEndIndex);
+                dataUnit.setMotorData(analysistDriveMotorData(thisDataBytes,0,new ArrayList<>(driverCount)));
+            }
             case 0x03:
             case 0x04:
             case 0x05:
@@ -331,7 +346,84 @@ public class GBT32960Util {
     }
 
     /**
-     * 分析实时信息上报报文
+     * 分析驱动电机报文
+     * @param dataBytes 整车数据部分的数据报文
+     * */
+    private static List<DriveMotorData> analysistDriveMotorData(byte[] dataBytes, int startBytesIndex, List<DriveMotorData> driveMotorDataList){
+        DriveMotorData driveMotorData = new DriveMotorData();
+        // 驱动电机序号
+        driveMotorData.setOrderNumber(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex]).intValue());
+        // 驱动电机状态
+        int stateValue = BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex+1]).intValue();
+        switch (stateValue){
+            case 0x01:{
+                // 耗电
+                driveMotorData.setMotorState(DriveMotorState.USING_ELECTRICITY);
+                break;
+            }
+            case 0x02:{
+                // 发电
+                driveMotorData.setMotorState(DriveMotorState.GENERATING_ELECTRICITY);
+                break;
+            }
+            case 0x03:{
+                // 关闭
+                driveMotorData.setMotorState(DriveMotorState.OFF);
+                break;
+            }
+            case 0x04:{
+                // 耗电
+                driveMotorData.setMotorState(DriveMotorState.PREPARE);
+                break;
+            }
+            case 0xFE:{
+                // 异常
+                driveMotorData.setMotorState(DriveMotorState.EXCEPTION);
+                break;
+            }
+            case 0xFF:{
+                // 无效
+                driveMotorData.setMotorState(DriveMotorState.INVALID);
+                break;
+            }
+        }
+        // 驱动电机控制器温度（偏移量-40）
+        driveMotorData.setControllerTemperature(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex+2]).intValue()-40);
+        // 驱动电机转速（偏移量-20000）
+        driveMotorData.setSpeed(BaseDataTypeUtil.bytesToUnsignedBigInteger(
+                Arrays.copyOfRange(dataBytes, startBytesIndex+3, startBytesIndex+5)
+        ).intValue()-20000);
+        // 驱动电机转矩（偏移量-2000）
+        driveMotorData.setTorque(BaseDataTypeUtil.bytesToUnsignedBigDecimal(
+                Arrays.copyOfRange(dataBytes, startBytesIndex+5, startBytesIndex+7)
+                ,new BigDecimal("0.1")
+        ).subtract(new BigDecimal(2000)).floatValue());
+        // 驱动电机温度（偏移量-40）
+        driveMotorData.setTemperature(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex+7]).intValue()-40);
+        // 驱动电机控制器输入电压
+        driveMotorData.setControllerInputVoltage(BaseDataTypeUtil.bytesToUnsignedBigDecimal(
+                Arrays.copyOfRange(dataBytes, startBytesIndex+8, startBytesIndex+10)
+                ,new BigDecimal("0.1")
+        ).floatValue());
+        // 驱动电机直流母线输入电压（偏移量-1000）
+        driveMotorData.setControllerBusCurrentDc(BaseDataTypeUtil.bytesToUnsignedBigDecimal(
+                Arrays.copyOfRange(dataBytes, startBytesIndex+10, startBytesIndex+12)
+                ,new BigDecimal("0.1")
+        ).subtract(new BigDecimal(1000)).floatValue());
+
+        driveMotorDataList.add(driveMotorData);
+        int endIndex = startBytesIndex+12;
+        if (endIndex<dataBytes.length){
+            return analysistDriveMotorData(dataBytes,endIndex,driveMotorDataList);
+        }else {
+            return driveMotorDataList;
+        }
+    }
+
+
+
+    /**
+     * 分析整车数据报文
      * @param dataBytes 整车数据部分的数据报文
      * */
     private static AutoStatisticsData analysistAutoStatisticsData(byte[] dataBytes){
