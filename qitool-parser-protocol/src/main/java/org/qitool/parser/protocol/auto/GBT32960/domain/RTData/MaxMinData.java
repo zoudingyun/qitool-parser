@@ -16,7 +16,7 @@ public class MaxMinData {
      * 有效值范围：1～250 <br>
      * “0xFE”(254)表示异常，“0xFF”(255)表示无效
      * */
-    private int maxVoltageBatterySubsystemId;
+    private Object maxVoltageBatterySubsystemId;
 
 
     /**
@@ -27,7 +27,7 @@ public class MaxMinData {
      * 有效值范围：1～250 <br>
      * “0xFE”(254)表示异常，“0xFF”(255)表示无效
      * */
-    private int maxVoltageBatteryCellId;
+    private Object maxVoltageBatteryCellId;
 
 
     /**
@@ -39,7 +39,7 @@ public class MaxMinData {
      * 最小计量单元：0.001 V <br>
      * “0xFF,0xFE”(65534)表示异常，“0xFF,0xFF”(65535)表示无效
      * */
-    private float maxVoltage;
+    private Object maxVoltage;
 
 
     /**
@@ -50,7 +50,7 @@ public class MaxMinData {
      * 有效值范围：1～250 <br>
      * “0xFE”(254)表示异常，“0xFF”(255)表示无效
      * */
-    private int minVoltageBatterySubsystemId;
+    private Object minVoltageBatterySubsystemId;
 
 
     /**
@@ -61,7 +61,7 @@ public class MaxMinData {
      * 有效值范围：1～250 <br>
      * “0xFE”(254)表示异常，“0xFF”(255)表示无效
      * */
-    private int minVoltageBatteryCellId;
+    private Object minVoltageBatteryCellId;
 
 
     /**
@@ -73,7 +73,7 @@ public class MaxMinData {
      * 最小计量单元：0.001 V <br>
      * “0xFF,0xFE”(65534)表示异常，“0xFF,0xFF”(65535)表示无效
      * */
-    private float minVoltage;
+    private Object minVoltage;
 
 
     /**
@@ -84,7 +84,7 @@ public class MaxMinData {
      * 有效值范围：1～250 <br>
      * “0xFE”(254)表示异常，“0xFF”(255)表示无效
      * */
-    private int maxTemperatureSubsystemId;
+    private Object maxTemperatureSubsystemId;
 
 
     /**
@@ -95,7 +95,7 @@ public class MaxMinData {
      * 有效值范围：1～250 <br>
      * “0xFE”(254)表示异常，“0xFF”(255)表示无效
      * */
-    private int maxTemperatureProbesId;
+    private Object maxTemperatureProbesId;
 
 
     /**
@@ -107,7 +107,7 @@ public class MaxMinData {
      * 最小计量单元：1℃ <br>
      * “0xFF,0xFE”(65534)表示异常，“0xFF,0xFF”(65535)表示无效
      * */
-    private float maxTemperature;
+    private Object maxTemperature;
 
 
     /**
@@ -118,7 +118,7 @@ public class MaxMinData {
      * 有效值范围：1～250 <br>
      * “0xFE”(254)表示异常，“0xFF”(255)表示无效
      * */
-    private int minTemperatureSubsystemId;
+    private Object minTemperatureSubsystemId;
 
 
     /**
@@ -129,7 +129,7 @@ public class MaxMinData {
      * 有效值范围：1～250 <br>
      * “0xFE”(254)表示异常，“0xFF”(255)表示无效
      * */
-    private int minTemperatureProbesId;
+    private Object minTemperatureProbesId;
 
 
     /**
@@ -141,102 +141,102 @@ public class MaxMinData {
      * 最小计量单元：1℃ <br>
      * “0xFF,0xFE”(65534)表示异常，“0xFF,0xFF”(65535)表示无效
      * */
-    private float minTemperature;
+    private Object minTemperature;
 
 
-    public float getMinTemperature() {
+    public Object getMinTemperature() {
         return minTemperature;
     }
 
-    public void setMinTemperature(float minTemperature) {
+    public void setMinTemperature(Object minTemperature) {
         this.minTemperature = minTemperature;
     }
 
-    public int getMinTemperatureProbesId() {
+    public Object getMinTemperatureProbesId() {
         return minTemperatureProbesId;
     }
 
-    public void setMinTemperatureProbesId(int minTemperatureProbesId) {
+    public void setMinTemperatureProbesId(Object minTemperatureProbesId) {
         this.minTemperatureProbesId = minTemperatureProbesId;
     }
 
-    public int getMinTemperatureSubsystemId() {
-        return minTemperatureSubsystemId;
-    }
-
-    public void setMinTemperatureSubsystemId(int minTemperatureSubsystemId) {
-        this.minTemperatureSubsystemId = minTemperatureSubsystemId;
-    }
-
-    public float getMaxTemperature() {
-        return maxTemperature;
-    }
-
-    public void setMaxTemperature(float maxTemperature) {
-        this.maxTemperature = maxTemperature;
-    }
-
-    public int getMaxTemperatureProbesId() {
-        return maxTemperatureProbesId;
-    }
-
-    public void setMaxTemperatureProbesId(int maxTemperatureProbesId) {
-        this.maxTemperatureProbesId = maxTemperatureProbesId;
-    }
-
-    public int getMaxTemperatureSubsystemId() {
-        return maxTemperatureSubsystemId;
-    }
-
-    public void setMaxTemperatureSubsystemId(int maxTemperatureSubsystemId) {
-        this.maxTemperatureSubsystemId = maxTemperatureSubsystemId;
-    }
-
-    public float getMinVoltage() {
-        return minVoltage;
-    }
-
-    public void setMinVoltage(float minVoltage) {
-        this.minVoltage = minVoltage;
-    }
-
-    public int getMinVoltageBatteryCellId() {
-        return minVoltageBatteryCellId;
-    }
-
-    public void setMinVoltageBatteryCellId(int minVoltageBatteryCellId) {
-        this.minVoltageBatteryCellId = minVoltageBatteryCellId;
-    }
-
-    public int getMinVoltageBatterySubsystemId() {
-        return minVoltageBatterySubsystemId;
-    }
-
-    public void setMinVoltageBatterySubsystemId(int minVoltageBatterySubsystemId) {
-        this.minVoltageBatterySubsystemId = minVoltageBatterySubsystemId;
-    }
-
-    public float getMaxVoltage() {
-        return maxVoltage;
-    }
-
-    public void setMaxVoltage(float maxVoltage) {
-        this.maxVoltage = maxVoltage;
-    }
-
-    public int getMaxVoltageBatteryCellId() {
-        return maxVoltageBatteryCellId;
-    }
-
-    public void setMaxVoltageBatteryCellId(int maxVoltageBatteryCellId) {
-        this.maxVoltageBatteryCellId = maxVoltageBatteryCellId;
-    }
-
-    public int getMaxVoltageBatterySubsystemId() {
+    public Object getMaxVoltageBatterySubsystemId() {
         return maxVoltageBatterySubsystemId;
     }
 
-    public void setMaxVoltageBatterySubsystemId(int maxVoltageBatterySubsystemId) {
+    public void setMaxVoltageBatterySubsystemId(Object maxVoltageBatterySubsystemId) {
         this.maxVoltageBatterySubsystemId = maxVoltageBatterySubsystemId;
+    }
+
+    public Object getMaxVoltageBatteryCellId() {
+        return maxVoltageBatteryCellId;
+    }
+
+    public void setMaxVoltageBatteryCellId(Object maxVoltageBatteryCellId) {
+        this.maxVoltageBatteryCellId = maxVoltageBatteryCellId;
+    }
+
+    public Object getMaxVoltage() {
+        return maxVoltage;
+    }
+
+    public void setMaxVoltage(Object maxVoltage) {
+        this.maxVoltage = maxVoltage;
+    }
+
+    public Object getMinVoltageBatterySubsystemId() {
+        return minVoltageBatterySubsystemId;
+    }
+
+    public void setMinVoltageBatterySubsystemId(Object minVoltageBatterySubsystemId) {
+        this.minVoltageBatterySubsystemId = minVoltageBatterySubsystemId;
+    }
+
+    public Object getMinVoltageBatteryCellId() {
+        return minVoltageBatteryCellId;
+    }
+
+    public void setMinVoltageBatteryCellId(Object minVoltageBatteryCellId) {
+        this.minVoltageBatteryCellId = minVoltageBatteryCellId;
+    }
+
+    public Object getMinVoltage() {
+        return minVoltage;
+    }
+
+    public void setMinVoltage(Object minVoltage) {
+        this.minVoltage = minVoltage;
+    }
+
+    public Object getMaxTemperatureSubsystemId() {
+        return maxTemperatureSubsystemId;
+    }
+
+    public void setMaxTemperatureSubsystemId(Object maxTemperatureSubsystemId) {
+        this.maxTemperatureSubsystemId = maxTemperatureSubsystemId;
+    }
+
+    public Object getMaxTemperatureProbesId() {
+        return maxTemperatureProbesId;
+    }
+
+    public void setMaxTemperatureProbesId(Object maxTemperatureProbesId) {
+        this.maxTemperatureProbesId = maxTemperatureProbesId;
+    }
+
+    public Object getMaxTemperature() {
+        return maxTemperature;
+    }
+
+    public void setMaxTemperature(Object maxTemperature) {
+        this.maxTemperature = maxTemperature;
+    }
+
+    public Object getMinTemperatureSubsystemId() {
+        return minTemperatureSubsystemId;
+    }
+
+    public void setMinTemperatureSubsystemId(Object minTemperatureSubsystemId) {
+        this.minTemperatureSubsystemId = minTemperatureSubsystemId;
     }
 }

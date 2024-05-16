@@ -11,11 +11,14 @@ import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnit;
 import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnitDataRealTimeData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.AutoStatisticsData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.DriveMotorData;
+import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.MaxMinData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.PositionData;
+import org.qitool.parser.protocol.auto.GBT32960.domain.dto.CheckedValue;
 import org.qitool.parser.protocol.auto.GBT32960.enums.*;
 import org.qitool.parser.protocol.auto.GBT32960.exceptions.*;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -388,13 +391,72 @@ public class GBT32960Util {
                     return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
-            case 0x06:
+            case 0x06:{
+                // 极值数据
+                // 数据结束位置
+                int dataEndIndex = dataStartIndex+14;
+                // 获取当前数据包数据数组
+                byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataEndIndex);
+                dataUnit.setMaxMinData(analysistMaxMinData(thisDataBytes));
+
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
+            }
             case 0x07:
             default:{
                 // 整车数据
                 return dataUnit;
             }
         }
+    }
+
+
+    /**
+     * 分析极值数据
+     * @param dataBytes 极值数据报文
+     * @return 极值数据
+     * */
+    private static MaxMinData analysistMaxMinData(byte[] dataBytes){
+        MaxMinData maxMinData = new MaxMinData();
+        CheckedValue value;
+        // 最高电压电池子系统号
+        maxMinData.setMaxVoltageBatterySubsystemId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[0]),1).getValue());
+        // 最高电压电池单体代号
+        maxMinData.setMaxVoltageBatteryCellId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[1]),1).getValue());
+        // 电池单体电压最高值
+        value = checkValueEnable(BaseDataTypeUtil.bytesToUnsignedBigInteger(Arrays.copyOfRange(dataBytes, 2, 4)),2);
+        maxMinData.setMaxVoltage(value.getEffective()?(new BigDecimal((Integer) value.getValue()).multiply(new BigDecimal("0.001"))):value.getValue());
+
+
+        // 最低电压电池子系统号
+        maxMinData.setMinVoltageBatterySubsystemId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[4]),1).getValue());
+        // 最低电压电池单体代号
+        maxMinData.setMinVoltageBatteryCellId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[5]),1).getValue());
+        // 电池单体电压最低值
+        value = checkValueEnable(BaseDataTypeUtil.bytesToUnsignedBigInteger(Arrays.copyOfRange(dataBytes, 6, 8)),2);
+        maxMinData.setMinVoltage(value.getEffective()?(new BigDecimal((Integer) value.getValue()).multiply(new BigDecimal("0.001"))):value.getValue());
+
+        // 最高温度子系统号
+        maxMinData.setMaxTemperatureSubsystemId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[8]),1).getValue());
+        // 最高温度探针序号
+        maxMinData.setMaxTemperatureProbesId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[9]),1).getValue());
+        // 最高温度值
+        value = checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[10]),1);
+        maxMinData.setMaxTemperature(value.getEffective()?(((Integer) value.getValue())-40):value.getValue());
+
+        // 最低温度子系统号
+        maxMinData.setMinTemperatureSubsystemId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[11]),1).getValue());
+        // 最低温度探针序号
+        maxMinData.setMinTemperatureProbesId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[12]),1).getValue());
+        // 最低温度值
+        value = checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[13]),1);
+        maxMinData.setMinTemperature(value.getEffective()?(((Integer) value.getValue())-40):value.getValue());
+
+        return maxMinData;
     }
 
 
@@ -752,6 +814,39 @@ public class GBT32960Util {
                     )
             );
         }
+    }
+
+    /**
+     * 检查数据是否有效
+     * @param bigInteger 转为10进制无符号整数的数据
+     * @param byteCount 字节长度
+     * @return 结果
+     * */
+    private static CheckedValue checkValueEnable(BigInteger bigInteger, int byteCount){
+        CheckedValue checkedValue = new CheckedValue();
+        if (byteCount == 1){
+            checkedValue.setEffective(bigInteger.intValue() !=254&&bigInteger.intValue() !=255);
+            if (checkedValue.getEffective()){
+                checkedValue.setValue(bigInteger.intValue());
+            }else if (bigInteger.intValue() == 254){
+                checkedValue.setValue("异常");
+            }else {
+                checkedValue.setValue("无效");
+            }
+        }else if (byteCount == 2){
+            checkedValue.setEffective(bigInteger.intValue() !=65534&&bigInteger.intValue() !=65535);
+            if (checkedValue.getEffective()){
+                checkedValue.setValue(bigInteger.intValue());
+            }else if (bigInteger.intValue() == 65534){
+                checkedValue.setValue("异常");
+            }else {
+                checkedValue.setValue("无效");
+            }
+        }else{
+            checkedValue.setValue(bigInteger.intValue());
+            checkedValue.setEffective(false);
+        }
+        return checkedValue;
     }
 
 }

@@ -28,7 +28,9 @@ public enum EngineState {
      * */
     INVALID("无效");
 
-    EngineState(String state) {
+    public final String value;
 
+    EngineState(String value) {
+        this.value = value;
     }
 }
