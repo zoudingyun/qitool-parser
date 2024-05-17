@@ -1,6 +1,5 @@
 package org.qitool.parser.protocol.auto;
 
-import com.sun.istack.internal.NotNull;
 import org.qitool.parser.general.BCCUtil;
 import org.qitool.parser.general.BaseDataTypeUtil;
 import org.qitool.parser.gis.CoordinateUtil;
@@ -39,6 +38,50 @@ public class GBT32960Util {
     private GBT32960Util() {}
 
     /**
+     * 0
+     * */
+    private static final BigDecimal VALUE_0 = new BigDecimal(0);
+
+
+    /**
+     * 1
+     * */
+    private static final BigDecimal VALUE_1 = new BigDecimal(1);
+
+    /**
+     * 40
+     * */
+    private static final BigDecimal VALUE_40 = new BigDecimal(40);
+
+    /**
+     * 1000
+     * */
+    private static final BigDecimal VALUE_1000 = new BigDecimal(1000);
+
+
+    /**
+     * 2000
+     * */
+    private static final BigDecimal VALUE_2000 = new BigDecimal(2000);
+
+    /**
+     * 20000
+     * */
+    private static final BigDecimal VALUE_20000 = new BigDecimal(20000);
+
+
+    /**
+     * 0.001
+     * */
+    private static final BigDecimal VALUE_0_001 = new BigDecimal("0.001");
+
+    /**
+     * 0.1
+     * */
+    private static final BigDecimal VALUE_0_1 = new BigDecimal("0.1");
+
+
+    /**
      * 解析GB-T 32960原始报文数据
      * @param gbt32960Hex hex数据
      * @return 解析后的数据
@@ -57,7 +100,7 @@ public class GBT32960Util {
 
         AutoData autoData = new AutoData();
         // 数据校验
-        checkData(gbt32960Bytes);
+        autoData.setBcc(checkData(gbt32960Bytes));
         // 解析命令单元
         autoData.setCommandUnit(formatCommandUnit(gbt32960Bytes));
         // 解析VIN码
@@ -422,39 +465,47 @@ public class GBT32960Util {
      * */
     private static MaxMinData analysistMaxMinData(byte[] dataBytes){
         MaxMinData maxMinData = new MaxMinData();
-        CheckedValue value;
-        // 最高电压电池子系统号
-        maxMinData.setMaxVoltageBatterySubsystemId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[0]),1).getValue());
-        // 最高电压电池单体代号
-        maxMinData.setMaxVoltageBatteryCellId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[1]),1).getValue());
-        // 电池单体电压最高值
-        value = checkValueEnable(BaseDataTypeUtil.bytesToUnsignedBigInteger(Arrays.copyOfRange(dataBytes, 2, 4)),2);
-        maxMinData.setMaxVoltage(value.getEffective()?(new BigDecimal((Integer) value.getValue()).multiply(new BigDecimal("0.001"))):value.getValue());
+
+        // 最高电压电池子系统号（1字节）
+        CheckedValue value = analysisByteData(dataBytes,1);
+        maxMinData.setMaxVoltageBatterySubsystemId(value.getValue());
+        // 最高电压电池单体代号（1字节）
+        value = analysisByteData(value.getDataBytes(),1);
+        maxMinData.setMaxVoltageBatteryCellId(value.getValue());
+        // 电池单体电压最高值（2字节 除以1000 保留3位小数）
+        value = analysisByteMultiplyData(value.getDataBytes(),2,VALUE_0_001);
+        maxMinData.setMaxVoltage(value.getValue());
 
 
-        // 最低电压电池子系统号
-        maxMinData.setMinVoltageBatterySubsystemId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[4]),1).getValue());
-        // 最低电压电池单体代号
-        maxMinData.setMinVoltageBatteryCellId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[5]),1).getValue());
-        // 电池单体电压最低值
-        value = checkValueEnable(BaseDataTypeUtil.bytesToUnsignedBigInteger(Arrays.copyOfRange(dataBytes, 6, 8)),2);
-        maxMinData.setMinVoltage(value.getEffective()?(new BigDecimal((Integer) value.getValue()).multiply(new BigDecimal("0.001"))):value.getValue());
+        // 最低电压电池子系统号（1字节）
+        value = analysisByteData(value.getDataBytes(),1);
+        maxMinData.setMinVoltageBatterySubsystemId(value.getValue());
+        // 最低电压电池单体代号（1字节）
+        value = analysisByteData(value.getDataBytes(),1);
+        maxMinData.setMinVoltageBatteryCellId(value.getValue());
+        // 电池单体电压最低值（2字节 除以1000 保留3位小数）
+        value = analysisByteMultiplyData(value.getDataBytes(),2,VALUE_0_001);
+        maxMinData.setMinVoltage(value.getValue());
 
         // 最高温度子系统号
-        maxMinData.setMaxTemperatureSubsystemId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[8]),1).getValue());
+        value = analysisByteData(value.getDataBytes(),1);
+        maxMinData.setMaxTemperatureSubsystemId(value.getValue());
         // 最高温度探针序号
-        maxMinData.setMaxTemperatureProbesId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[9]),1).getValue());
+        value = analysisByteData(value.getDataBytes(),1);
+        maxMinData.setMaxTemperatureProbesId(value.getValue());
         // 最高温度值
-        value = checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[10]),1);
-        maxMinData.setMaxTemperature(value.getEffective()?(((Integer) value.getValue())-40):value.getValue());
+        value = analysisByteSubtractOffsetData(value.getDataBytes(),1,VALUE_40);
+        maxMinData.setMaxTemperature(value.getValue());
 
         // 最低温度子系统号
-        maxMinData.setMinTemperatureSubsystemId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[11]),1).getValue());
+        value = analysisByteData(value.getDataBytes(),1);
+        maxMinData.setMinTemperatureSubsystemId(value.getValue());
         // 最低温度探针序号
-        maxMinData.setMinTemperatureProbesId(checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[12]),1).getValue());
+        value = analysisByteData(value.getDataBytes(),1);
+        maxMinData.setMinTemperatureProbesId(value.getValue());
         // 最低温度值
-        value = checkValueEnable(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[13]),1);
-        maxMinData.setMinTemperature(value.getEffective()?(((Integer) value.getValue())-40):value.getValue());
+        value = analysisByteSubtractOffsetData(value.getDataBytes(),1,VALUE_40);
+        maxMinData.setMinTemperature(value.getValue());
 
         return maxMinData;
     }
@@ -504,8 +555,10 @@ public class GBT32960Util {
     private static List<DriveMotorData> analysisDriveMotorData(byte[] dataBytes, int startBytesIndex, List<DriveMotorData> driveMotorDataList){
         DriveMotorData driveMotorData = new DriveMotorData();
         // 驱动电机序号
-        driveMotorData.setOrderNumber(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex]).intValue());
+        CheckedValue value = analysisByteData(dataBytes,1);
+        driveMotorData.setOrderNumber((int)value.getValue());
         // 驱动电机状态
+        value = analysisByteData(value.getDataBytes(),1);
         int stateValue = BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex+1]).intValue();
         switch (stateValue){
             case 0x01:{
@@ -540,28 +593,26 @@ public class GBT32960Util {
             }
         }
         // 驱动电机控制器温度（偏移量-40）
-        driveMotorData.setControllerTemperature(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex+2]).intValue()-40);
+        value = analysisByteSubtractOffsetData(value.getDataBytes(),1,VALUE_40);
+        driveMotorData.setControllerTemperature(value.getValue());
         // 驱动电机转速（偏移量-20000）
-        driveMotorData.setSpeed(BaseDataTypeUtil.bytesToUnsignedBigInteger(
-                Arrays.copyOfRange(dataBytes, startBytesIndex+3, startBytesIndex+5)
-        ).intValue()-20000);
-        // 驱动电机转矩（偏移量-2000）
-        driveMotorData.setTorque(BaseDataTypeUtil.bytesToUnsignedBigDecimal(
-                Arrays.copyOfRange(dataBytes, startBytesIndex+5, startBytesIndex+7)
-                ,new BigDecimal("0.1")
-        ).subtract(new BigDecimal(2000)).floatValue());
+        value = analysisByteSubtractOffsetData(value.getDataBytes(),2,VALUE_20000);
+        driveMotorData.setSpeed(value.getValue());
+        // 驱动电机转矩（除以10 偏移量-2000）
+        value = analysisByteData(value.getDataBytes(),2,VALUE_0_1,VALUE_2000);
+        driveMotorData.setTorque(value.getValue());
+
         // 驱动电机温度（偏移量-40）
-        driveMotorData.setTemperature(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex+7]).intValue()-40);
-        // 驱动电机控制器输入电压
-        driveMotorData.setControllerInputVoltage(BaseDataTypeUtil.bytesToUnsignedBigDecimal(
-                Arrays.copyOfRange(dataBytes, startBytesIndex+8, startBytesIndex+10)
-                ,new BigDecimal("0.1")
-        ).floatValue());
-        // 驱动电机直流母线输入电压（偏移量-1000）
-        driveMotorData.setControllerBusCurrentDc(BaseDataTypeUtil.bytesToUnsignedBigDecimal(
-                Arrays.copyOfRange(dataBytes, startBytesIndex+10, startBytesIndex+12)
-                ,new BigDecimal("0.1")
-        ).subtract(new BigDecimal(1000)).floatValue());
+        value = analysisByteSubtractOffsetData(value.getDataBytes(),1,VALUE_40);
+        driveMotorData.setTemperature(value.getValue());
+        // 驱动电机控制器输入电压(缩放0.1)
+        value = analysisByteMultiplyData(value.getDataBytes(),2,VALUE_0_1);
+        driveMotorData.setControllerInputVoltage(value.getValue());
+
+        // 驱动电机直流母线输入电压（缩放0.1 偏移量-1000）
+        value = analysisByteData(value.getDataBytes(),2,VALUE_0_1,VALUE_1000);
+        driveMotorData.setControllerBusCurrentDc(value.getValue());
+
 
         driveMotorDataList.add(driveMotorData);
         int endIndex = startBytesIndex+12;
@@ -581,7 +632,8 @@ public class GBT32960Util {
     private static AutoStatisticsData analysistAutoStatisticsData(byte[] dataBytes){
         AutoStatisticsData autoStatisticsData = new AutoStatisticsData();
         // 汽车状态
-        int autoStateValue = dataBytes[0] & 0xFF;
+        CheckedValue value = analysisByteData(dataBytes,1);
+        int autoStateValue = (int)value.getValue();
         switch (autoStateValue){
             case 0x01:{
                 // 车辆已启动
@@ -610,7 +662,8 @@ public class GBT32960Util {
             }
         }
         // 充电状态
-        int chargingStateValue = dataBytes[1] & 0xFF;
+        value = analysisByteData(value.getDataBytes(),1);
+        int chargingStateValue =(int) value.getValue();
         switch (chargingStateValue){
             case 0x01:{
                 // 停车充电
@@ -644,7 +697,8 @@ public class GBT32960Util {
             }
         }
         // 运行模式
-        int workModeValue = dataBytes[2] & 0xFF;
+        value = analysisByteData(value.getDataBytes(),1);
+        int workModeValue = (int)value.getValue();
         switch (workModeValue){
             case 0x01:{
                 // 纯电
@@ -673,35 +727,23 @@ public class GBT32960Util {
             }
         }
         // 速度
-        autoStatisticsData.setSpeed(
-                BaseDataTypeUtil.bytesToUnsignedBigDecimal(
-                        Arrays.copyOfRange(dataBytes, 3, 5)
-                        ,new BigDecimal("0.1")).floatValue()
-        );
+        value = analysisByteMultiplyData(value.getDataBytes(),2,VALUE_0_1);
+        autoStatisticsData.setSpeed(value.getValue());
         // 累计里程
-        autoStatisticsData.setMileage(
-                BaseDataTypeUtil.bytesToUnsignedBigDecimal(
-                        Arrays.copyOfRange(dataBytes, 5, 9)
-                        ,new BigDecimal("0.1")).doubleValue()
-        );
+        value = analysisByteMultiplyData(value.getDataBytes(),4,VALUE_0_1);
+        autoStatisticsData.setMileage(value.getValue());
         // 总电压
-        autoStatisticsData.setTotalVoltage(
-                BaseDataTypeUtil.bytesToUnsignedBigDecimal(
-                        Arrays.copyOfRange(dataBytes, 9, 11)
-                        ,new BigDecimal("0.1")).floatValue()
-        );
+        value = analysisByteMultiplyData(value.getDataBytes(),2,VALUE_0_1);
+        autoStatisticsData.setTotalVoltage(value.getValue());
         // 总电流
-        autoStatisticsData.setTotalCurrent(
-                BaseDataTypeUtil.bytesToUnsignedBigDecimal(
-                        Arrays.copyOfRange(dataBytes, 11, 13)
-                        ,new BigDecimal("0.1")).subtract(new BigDecimal(1000)).floatValue()
-        );
+        value = analysisByteData(value.getDataBytes(),2,VALUE_0_1,VALUE_1000);
+        autoStatisticsData.setTotalCurrent(value.getValue());
         // soc
-        autoStatisticsData.setSoc(
-                BaseDataTypeUtil.bytesToBigInteger(Arrays.copyOfRange(dataBytes, 13, 14)).intValue()
-        );
+        value = analysisByteData(value.getDataBytes(),1);
+        autoStatisticsData.setSoc(value.getValue());
         // DC/DC 状态
-        int dcDcValue = dataBytes[14] & 0xFF;
+        value = analysisByteData(value.getDataBytes(),1);
+        int dcDcValue = (int)value.getValue();
         switch (dcDcValue){
             case 0x01:{
                 // 工作
@@ -725,6 +767,7 @@ public class GBT32960Util {
             }
         }
         // 有无驱动力
+        value = analysisByteData(value.getDataBytes(),1);
         autoStatisticsData.setDriving(BaseDataTypeUtil.checkBitValue(dataBytes[15],3));
         // 有无制动力
         autoStatisticsData.setBraking(BaseDataTypeUtil.checkBitValue(dataBytes[15],4));
@@ -740,13 +783,16 @@ public class GBT32960Util {
             autoStatisticsData.setGear(String.format("%s", gearValue));
         }
         // 绝缘电阻
-        autoStatisticsData.setResistance(BaseDataTypeUtil.bytesToUnsignedBigInteger(Arrays.copyOfRange(dataBytes, 16, 18)).intValue());
+        value = analysisByteData(value.getDataBytes(),2);
+        autoStatisticsData.setResistance((int)value.getValue());
+        // 油门
+        value = analysisByteData(value.getDataBytes(),1);
+        autoStatisticsData.setAcceleratorPedalState(value.getValue());
+        // 刹车
+        value = analysisByteData(value.getDataBytes(),1);
+        autoStatisticsData.setBrakePedalState(value.getValue());
         // 预留位
         autoStatisticsData.setReservedRawData(Arrays.copyOfRange(dataBytes, 18, 20));
-        // 油门
-        autoStatisticsData.setAcceleratorPedalState(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[18]).intValue());
-        // 刹车
-        autoStatisticsData.setBrakePedalState(BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[19]).intValue());
 
         return autoStatisticsData;
 
@@ -757,10 +803,9 @@ public class GBT32960Util {
      * @param dataUnitBytes 数据报文
      * @return 时间字符串
      * */
-    private static String getTimeString(@NotNull byte[] dataUnitBytes) {
+    private static String getTimeString(byte[] dataUnitBytes) {
         byte[] timeBytes = Arrays.copyOfRange(dataUnitBytes, 0, 6);
-        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
+        int year = Calendar.getInstance().get(Calendar.YEAR);
         // 获取年份的百位和千位数字
         int hundred = (year / 100) % 10;
         int thousand = (year / 1000) % 10;
@@ -786,7 +831,7 @@ public class GBT32960Util {
      * 检查数据格式
      * @param gbt32960Bytes 32960报文数据
      * */
-    public static void checkData(byte[] gbt32960Bytes) {
+    public static int checkData(byte[] gbt32960Bytes) {
         if (gbt32960Bytes == null) {
             throw new GBT32960FormatException("数据为空");
         }
@@ -814,39 +859,121 @@ public class GBT32960Util {
                     )
             );
         }
+        return BaseDataTypeUtil.byteToUnsignedBigInteger(bccByte).intValue();
     }
 
     /**
      * 检查数据是否有效
      * @param bigInteger 转为10进制无符号整数的数据
      * @param byteCount 字节长度
-     * @return 结果
+     * @return 结果（包含是否有效，和转化后的数据）
      * */
     private static CheckedValue checkValueEnable(BigInteger bigInteger, int byteCount){
         CheckedValue checkedValue = new CheckedValue();
         if (byteCount == 1){
-            checkedValue.setEffective(bigInteger.intValue() !=254&&bigInteger.intValue() !=255);
+            checkedValue.setEffective(bigInteger.longValue() !=254&&bigInteger.longValue() !=255);
             if (checkedValue.getEffective()){
-                checkedValue.setValue(bigInteger.intValue());
-            }else if (bigInteger.intValue() == 254){
+                checkedValue.setValue(bigInteger.longValue());
+            }else if (bigInteger.longValue() == 254){
                 checkedValue.setValue("异常");
             }else {
                 checkedValue.setValue("无效");
             }
         }else if (byteCount == 2){
-            checkedValue.setEffective(bigInteger.intValue() !=65534&&bigInteger.intValue() !=65535);
+            checkedValue.setEffective(bigInteger.longValue() !=65534&&bigInteger.longValue() !=65535);
             if (checkedValue.getEffective()){
-                checkedValue.setValue(bigInteger.intValue());
-            }else if (bigInteger.intValue() == 65534){
+                checkedValue.setValue(bigInteger.longValue());
+            }else if (bigInteger.longValue() == 65534){
                 checkedValue.setValue("异常");
             }else {
                 checkedValue.setValue("无效");
             }
-        }else{
-            checkedValue.setValue(bigInteger.intValue());
+        }else if (byteCount == 4){
+            checkedValue.setEffective(bigInteger.longValue() !=4294967294L&&bigInteger.longValue() !=4294967295L);
+            if (checkedValue.getEffective()){
+                checkedValue.setValue(bigInteger.longValue());
+            }else if (bigInteger.longValue() == 4294967294L){
+                checkedValue.setValue("异常");
+            }else {
+                checkedValue.setValue("无效");
+            }
+        }
+        else{
+            checkedValue.setValue(bigInteger.longValue());
             checkedValue.setEffective(false);
         }
         return checkedValue;
     }
+
+    /**
+     * 检查数据是否有效
+     * @param dataBytes 数据字节
+     * @return 结果（包含是否有效，和转化后的数据）
+     * */
+    private static CheckedValue checkValueEnable(byte[] dataBytes){
+        BigInteger value = BaseDataTypeUtil.bytesToUnsignedBigInteger(dataBytes);
+        return checkValueEnable(value,dataBytes.length);
+    }
+
+
+    /**
+     * 通过字节数分析数据值
+     * @param dataBytes 数据数组
+     * @param byteCount 本次数据截取长度
+     * @param multiplyNum [×]系数 (先执行)
+     * @param subtractOffset [-]偏移量 (后执行)
+     * */
+    private static CheckedValue analysisByteData(byte[] dataBytes,int byteCount,BigDecimal multiplyNum,BigDecimal subtractOffset){
+        // 本数据报文部分
+        byte[] data = Arrays.copyOfRange(dataBytes, 0, byteCount);
+        // 截取后剩余部分
+        byte[] leaveData =  Arrays.copyOfRange(dataBytes, byteCount, dataBytes.length);
+        // 检查数据
+        CheckedValue checkedValue = checkValueEnable(data);
+        checkedValue.setDataBytes(leaveData);
+
+        if (checkedValue.getEffective()){
+            BigDecimal checkedBigDecimal = new BigDecimal((long)checkedValue.getValue()).multiply(multiplyNum).subtract(subtractOffset);
+            // 根据数据类型设置值
+            if (multiplyNum.compareTo(new BigDecimal(1))<0){
+                checkedValue.setValue(checkedBigDecimal.floatValue());
+            }else {
+                checkedValue.setValue(checkedBigDecimal.intValue());
+            }
+        }
+        return checkedValue;
+    }
+
+
+    /**
+     * 通过字节数分析需要乘系数的数据值
+     * @param dataBytes 数据数组
+     * @param byteCount 本次数据截取长度
+     * @param multiplyNum [×]系数
+     * */
+    private static CheckedValue analysisByteMultiplyData(byte[] dataBytes,int byteCount,BigDecimal multiplyNum){
+        return analysisByteData(dataBytes,byteCount,multiplyNum,VALUE_0);
+    }
+
+    /**
+     * 通过字节数分析需要减偏移量的数据值
+     * @param dataBytes 数据数组
+     * @param byteCount 本次数据截取长度
+     * @param subtractOffset  [-]偏移量
+     * */
+    private static CheckedValue analysisByteSubtractOffsetData(byte[] dataBytes,int byteCount,BigDecimal subtractOffset){
+        return analysisByteData(dataBytes,byteCount,VALUE_1,subtractOffset);
+    }
+
+
+    /**
+     * 通过字节数分析整型数据值
+     * @param dataBytes 数据数组
+     * @param byteCount 本次数据截取长度
+     * */
+    private static CheckedValue analysisByteData(byte[] dataBytes,int byteCount){
+        return analysisByteData(dataBytes,byteCount,VALUE_1,VALUE_0);
+    }
+
 
 }

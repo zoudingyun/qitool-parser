@@ -1,7 +1,5 @@
 package org.qitool.parser.protocol.auto.GBT32960.domain.dto;
 
-import java.math.BigInteger;
-
 /**
  * 已检查过的数据
  *
@@ -20,6 +18,11 @@ public class CheckedValue {
      * */
     private Object value;
 
+    /**
+     * 执行完本次分析后剩余的数据数组
+     * */
+    private byte[] dataBytes;
+
 
     public boolean getEffective() {
         return effective;
@@ -35,5 +38,13 @@ public class CheckedValue {
 
     public void setValue(Object value) {
         this.value = value;
+    }
+
+    public byte[] getDataBytes() {
+        return dataBytes;
+    }
+
+    public void setDataBytes(byte[] dataBytes) {
+        this.dataBytes = dataBytes;
     }
 }

@@ -34,7 +34,7 @@ public class DriveMotorData {
      * 最小计量单元：1 ℃<br>
      * “0xFE”(254)表示异常，“OxFF”(255)表示无效
      * */
-    private int controllerTemperature;
+    private Object controllerTemperature;
 
     /**
      * 驱动电机转速
@@ -45,7 +45,7 @@ public class DriveMotorData {
      * 最小计量单元：1 r/min<br>
      * “0xFF,0xFE”(65534)表示异常，“0xFF,0xFF”(65535)表示无效
      * */
-    private int speed;
+    private Object speed;
 
     /**
      * 驱动电机转矩
@@ -56,7 +56,7 @@ public class DriveMotorData {
      * 最小计量单元：0.1 N·m<br>
      * “0xFF,0xFE”(65534)表示异常，“0xFF,0xFF”(65535)表示无效
      * */
-    private float torque;
+    private Object torque;
 
     /**
      * 驱动电机温度
@@ -67,7 +67,7 @@ public class DriveMotorData {
      * 最小计量单元：1 ℃<br>
      * “0xFE”(254)表示异常，“OxFF”(255)表示无效
      * */
-    private int temperature;
+    private Object temperature;
 
 
     /**
@@ -79,7 +79,7 @@ public class DriveMotorData {
      * 最小计量单元：0.1V<br>
      * “0xFF,0xFE”(65534)表示异常，“0xFF,0xFF”(65535)表示无效
      * */
-    private float controllerInputVoltage;
+    private Object controllerInputVoltage;
 
 
     /**
@@ -91,7 +91,7 @@ public class DriveMotorData {
      * 最小计量单元：0.1A <br>
      * “0xFF,0xFE”(65534)表示异常，“0xFF,0xFF”(65535)表示无效
      * */
-    private float controllerBusCurrentDc;
+    private Object controllerBusCurrentDc;
 
 
     public int getOrderNumber() {
@@ -110,51 +110,51 @@ public class DriveMotorData {
         this.motorState = motorState;
     }
 
-    public int getControllerTemperature() {
+    public Object getControllerTemperature() {
         return controllerTemperature;
     }
 
-    public void setControllerTemperature(int controllerTemperature) {
+    public void setControllerTemperature(Object controllerTemperature) {
         this.controllerTemperature = controllerTemperature;
     }
 
-    public int getSpeed() {
+    public Object getSpeed() {
         return speed;
     }
 
-    public void setSpeed(int speed) {
+    public void setSpeed(Object speed) {
         this.speed = speed;
     }
 
-    public float getTorque() {
+    public Object getTorque() {
         return torque;
     }
 
-    public void setTorque(float torque) {
+    public void setTorque(Object torque) {
         this.torque = torque;
     }
 
-    public int getTemperature() {
+    public Object getTemperature() {
         return temperature;
     }
 
-    public void setTemperature(int temperature) {
+    public void setTemperature(Object temperature) {
         this.temperature = temperature;
     }
 
-    public float getControllerInputVoltage() {
+    public Object getControllerInputVoltage() {
         return controllerInputVoltage;
     }
 
-    public void setControllerInputVoltage(float controllerInputVoltage) {
+    public void setControllerInputVoltage(Object controllerInputVoltage) {
         this.controllerInputVoltage = controllerInputVoltage;
     }
 
-    public float getControllerBusCurrentDc() {
+    public Object getControllerBusCurrentDc() {
         return controllerBusCurrentDc;
     }
 
-    public void setControllerBusCurrentDc(float controllerBusCurrentDc) {
+    public void setControllerBusCurrentDc(Object controllerBusCurrentDc) {
         this.controllerBusCurrentDc = controllerBusCurrentDc;
     }
 }

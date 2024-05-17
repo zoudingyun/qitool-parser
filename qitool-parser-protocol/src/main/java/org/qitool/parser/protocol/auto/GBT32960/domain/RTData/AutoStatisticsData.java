@@ -36,7 +36,7 @@ public class AutoStatisticsData {
      * 报文“0xFF,0xFE”表示异常,“OxFF,OxFF”表示无效<br>
      * --------------------------------------------------------<br>
      * */
-    private Float speed;
+    private Object speed;
 
     /**
      * 累计里程
@@ -46,7 +46,7 @@ public class AutoStatisticsData {
      * 报文“0xFF，0xFF，0xFF,0xFE”表示异常，“oxFF,0xFF,OxFF,0xFF”表示无效<br>
      * --------------------------------------------------------<br>
      * */
-    private Double mileage;
+    private Object mileage;
 
     /**
      * 总电压
@@ -56,7 +56,7 @@ public class AutoStatisticsData {
      * “OxFF,OxFE”表示异常,“OxFF,0xFF”表示无效<br>
      * --------------------------------------------------------<br>
      * */
-    private Float totalVoltage;
+    private Object totalVoltage;
 
     /**
      * 总电流
@@ -66,7 +66,7 @@ public class AutoStatisticsData {
      * 最小计量单元:0.1 A, “0xFF,0xFE”表示异常，“OxFF,0xFF”表示无效<br>
      * --------------------------------------------------------<br>
      * */
-    private Float totalCurrent;
+    private Object totalCurrent;
 
 
     /**
@@ -76,7 +76,7 @@ public class AutoStatisticsData {
      * 有效值范围:0～100(表示0%~100%),最小计量单元:1%<br>
      * --------------------------------------------------------<br>
      * */
-    private Integer soc;
+    private Object soc;
 
     /**
      * DC/DC状态
@@ -128,7 +128,7 @@ public class AutoStatisticsData {
      * -2：数据无效<br>
      * --------------------------------------------------------<br>
      * */
-    private Integer acceleratorPedalState;
+    private Object acceleratorPedalState;
 
 
     /**
@@ -141,7 +141,7 @@ public class AutoStatisticsData {
      * -2：数据无效<br>
      * --------------------------------------------------------<br>
      * */
-    private Integer brakePedalState;
+    private Object brakePedalState;
 
     /**
      * 末尾两字节预留数据位未处理的数据
@@ -173,43 +173,43 @@ public class AutoStatisticsData {
         this.workMode = workMode;
     }
 
-    public Float getSpeed() {
+    public Object getSpeed() {
         return speed;
     }
 
-    public void setSpeed(Float speed) {
+    public void setSpeed(Object speed) {
         this.speed = speed;
     }
 
-    public Double getMileage() {
+    public Object getMileage() {
         return mileage;
     }
 
-    public void setMileage(Double mileage) {
+    public void setMileage(Object mileage) {
         this.mileage = mileage;
     }
 
-    public Float getTotalVoltage() {
+    public Object getTotalVoltage() {
         return totalVoltage;
     }
 
-    public void setTotalVoltage(Float totalVoltage) {
+    public void setTotalVoltage(Object totalVoltage) {
         this.totalVoltage = totalVoltage;
     }
 
-    public Float getTotalCurrent() {
+    public Object getTotalCurrent() {
         return totalCurrent;
     }
 
-    public void setTotalCurrent(Float totalCurrent) {
+    public void setTotalCurrent(Object totalCurrent) {
         this.totalCurrent = totalCurrent;
     }
 
-    public Integer getSoc() {
+    public Object getSoc() {
         return soc;
     }
 
-    public void setSoc(Integer soc) {
+    public void setSoc(Object soc) {
         this.soc = soc;
     }
 
@@ -253,19 +253,19 @@ public class AutoStatisticsData {
         this.resistance = resistance;
     }
 
-    public Integer getAcceleratorPedalState() {
+    public Object getAcceleratorPedalState() {
         return acceleratorPedalState;
     }
 
-    public void setAcceleratorPedalState(Integer acceleratorPedalState) {
+    public void setAcceleratorPedalState(Object acceleratorPedalState) {
         this.acceleratorPedalState = acceleratorPedalState;
     }
 
-    public Integer getBrakePedalState() {
+    public Object getBrakePedalState() {
         return brakePedalState;
     }
 
-    public void setBrakePedalState(Integer brakePedalState) {
+    public void setBrakePedalState(Object brakePedalState) {
         this.brakePedalState = brakePedalState;
     }
 
