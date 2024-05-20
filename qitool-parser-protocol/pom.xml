@@ -9,9 +9,9 @@
         <version>0.0.3</version>
     </parent>
 
-    <artifactId>qitool-parser-general</artifactId>
+    <artifactId>qitool-parser-protocol</artifactId>
     <packaging>jar</packaging>
-    <description>qitool-parser 通用工具</description>
+    <description>qitool-parser 协议报文解析工具</description>
 
     <properties>
     </properties>
@@ -34,6 +34,19 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!--通用工具模块-->
+        <dependency>
+            <groupId>org.qitool.parser</groupId>
+            <artifactId>qitool-parser-general</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!--GIS工具模块-->
+        <dependency>
+            <groupId>org.qitool.parser</groupId>
+            <artifactId>qitool-parser-gis</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
 
     </dependencies>
