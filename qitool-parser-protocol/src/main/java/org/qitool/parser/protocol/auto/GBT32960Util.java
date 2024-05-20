@@ -830,6 +830,7 @@ public class GBT32960Util {
     /**
      * 检查数据格式
      * @param gbt32960Bytes 32960报文数据
+     * @return 返回crc数字
      * */
     public static int checkData(byte[] gbt32960Bytes) {
         if (gbt32960Bytes == null) {
