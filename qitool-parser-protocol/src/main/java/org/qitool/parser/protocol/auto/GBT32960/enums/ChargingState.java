@@ -38,7 +38,9 @@ public enum ChargingState {
      * */
     INVALID("无效");
 
-    private ChargingState(String state) {
+    public final String value;
 
+    ChargingState(String value) {
+        this.value = value;
     }
 }

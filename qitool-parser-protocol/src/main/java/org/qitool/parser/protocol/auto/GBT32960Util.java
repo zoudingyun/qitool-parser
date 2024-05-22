@@ -558,8 +558,8 @@ public class GBT32960Util {
         CheckedValue value = analysisByteData(dataBytes,1);
         driveMotorData.setOrderNumber((int)value.getValue());
         // 驱动电机状态
-        value = analysisByteData(value.getDataBytes(),1);
-        int stateValue = BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex+1]).intValue();
+        value = analysisByteDataWithoutDesc(value.getDataBytes(),1);
+        int stateValue = ((BigInteger) value.getValue()).intValue();
         switch (stateValue){
             case 0x01:{
                 // 耗电
@@ -632,8 +632,8 @@ public class GBT32960Util {
     private static AutoStatisticsData analysistAutoStatisticsData(byte[] dataBytes){
         AutoStatisticsData autoStatisticsData = new AutoStatisticsData();
         // 汽车状态
-        CheckedValue value = analysisByteData(dataBytes,1);
-        int autoStateValue = (int)value.getValue();
+        CheckedValue value = analysisByteDataWithoutDesc(dataBytes,1);
+        int autoStateValue = ((BigInteger) value.getValue()).intValue();
         switch (autoStateValue){
             case 0x01:{
                 // 车辆已启动
@@ -662,8 +662,8 @@ public class GBT32960Util {
             }
         }
         // 充电状态
-        value = analysisByteData(value.getDataBytes(),1);
-        int chargingStateValue =(int) value.getValue();
+        value = analysisByteDataWithoutDesc(value.getDataBytes(),1);
+        int chargingStateValue =((BigInteger) value.getValue()).intValue();
         switch (chargingStateValue){
             case 0x01:{
                 // 停车充电
@@ -697,8 +697,8 @@ public class GBT32960Util {
             }
         }
         // 运行模式
-        value = analysisByteData(value.getDataBytes(),1);
-        int workModeValue = (int)value.getValue();
+        value = analysisByteDataWithoutDesc(value.getDataBytes(),1);
+        int workModeValue = ((BigInteger) value.getValue()).intValue();
         switch (workModeValue){
             case 0x01:{
                 // 纯电
@@ -742,8 +742,8 @@ public class GBT32960Util {
         value = analysisByteData(value.getDataBytes(),1);
         autoStatisticsData.setSoc(value.getValue());
         // DC/DC 状态
-        value = analysisByteData(value.getDataBytes(),1);
-        int dcDcValue = (int)value.getValue();
+        value = analysisByteDataWithoutDesc(value.getDataBytes(),1);
+        int dcDcValue = ((BigInteger) value.getValue()).intValue();
         switch (dcDcValue){
             case 0x01:{
                 // 工作
@@ -974,6 +974,24 @@ public class GBT32960Util {
      * */
     private static CheckedValue analysisByteData(byte[] dataBytes,int byteCount){
         return analysisByteData(dataBytes,byteCount,VALUE_1,VALUE_0);
+    }
+
+    /**
+     * 通过字节数分析整型数据值，只做基本数值转换，不分析是否有效
+     * @param dataBytes 数据数组
+     * @param byteCount 本次数据截取长度
+     * @return 转换后的整型数据
+     * */
+    private static CheckedValue analysisByteDataWithoutDesc(byte[] dataBytes,int byteCount){
+        // 本数据报文部分
+        byte[] data = Arrays.copyOfRange(dataBytes, 0, byteCount);
+        // 截取后剩余部分
+        byte[] leaveData =  Arrays.copyOfRange(dataBytes, byteCount, dataBytes.length);
+        // 检查数据
+        CheckedValue checkedValue = checkValueEnable(data);
+        checkedValue.setDataBytes(leaveData);
+        checkedValue.setValue(BaseDataTypeUtil.bytesToUnsignedBigInteger(data));
+        return checkedValue;
     }
 
 
