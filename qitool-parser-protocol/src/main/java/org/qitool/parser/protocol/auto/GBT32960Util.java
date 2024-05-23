@@ -8,10 +8,7 @@ import org.qitool.parser.protocol.auto.GBT32960.domain.AutoData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.CommandUnit;
 import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnit;
 import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnitDataRealTimeData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.AutoStatisticsData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.DriveMotorData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.MaxMinData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.PositionData;
+import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.*;
 import org.qitool.parser.protocol.auto.GBT32960.domain.dto.CheckedValue;
 import org.qitool.parser.protocol.auto.GBT32960.enums.*;
 import org.qitool.parser.protocol.auto.GBT32960.exceptions.*;
@@ -49,6 +46,11 @@ public class GBT32960Util {
     private static final BigDecimal VALUE_1 = new BigDecimal(1);
 
     /**
+     * 4
+     * */
+    private static final BigDecimal VALUE_4 = new BigDecimal(4);
+
+    /**
      * 40
      * */
     private static final BigDecimal VALUE_40 = new BigDecimal(40);
@@ -79,6 +81,17 @@ public class GBT32960Util {
      * 0.1
      * */
     private static final BigDecimal VALUE_0_1 = new BigDecimal("0.1");
+
+    /**
+     * 异常描述
+     * */
+    private static final String EXCEPTIONAL = "异常";
+
+    /**
+     * 无效描述
+     * */
+    private static final String INVALID = "无效";
+
 
 
     /**
@@ -449,12 +462,102 @@ public class GBT32960Util {
                     return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
-            case 0x07:
+            case 0x07:{
+                // 报警数据
+                // 真实长度
+                int realLength = 0;
+                // 获取当前数据包数据数组
+                byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataBytes.length);
+
+                // 告警数据
+                AlarmData alarmData = new AlarmData();
+                // 告警等级(1字节)
+                realLength +=1;
+                CheckedValue value = analysisByteData(thisDataBytes,VALUE_1.intValue());
+                alarmData.setAlarmLevel(value.getValue());
+                // 通用报警标志(4字节)
+                realLength +=4;
+                AlarmCommonFlag alarmCommonFlag = new AlarmCommonFlag(Arrays.copyOfRange(value.getDataBytes(), 0, VALUE_4.intValue()));
+                value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_4.intValue());
+                alarmData.setAlarmCommonFlag(alarmCommonFlag);
+                // 可充电储能装置故障总数N1(1字节)
+                realLength +=1;
+                value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+                alarmData.setEnergyStorageAlarmCount(value.getValue());
+                // 可充电储能装置故障代码列表
+                if (value.getValue() instanceof Number){
+                    // 如果故障数量是个数字（说明有效）
+                    int count = (int)value.getValue();
+                    realLength += (count*VALUE_4.intValue());
+                    alarmData.setEnergyStorageAlarmCodes(analysisAlarmCodes(value,count));
+                }
+                // 驱动电机故障总数N₂(1字节)
+                realLength +=1;
+                value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+                alarmData.setDriveMotorAlarmCount(value.getValue());
+                // 驱动电机故障代码列表
+                if (value.getValue() instanceof Number){
+                    // 如果故障数量是个数字（说明有效）
+                    int count = (int)value.getValue();
+                    realLength += (count*VALUE_4.intValue());
+                    alarmData.setDriveMotorAlarmCodes(analysisAlarmCodes(value,count));
+                }
+                // 发动机故障总数N₃(1字节)
+                realLength +=1;
+                value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+                alarmData.setEngineAlarmCount(value.getValue());
+                // 发动机故障代码列表
+                if (value.getValue() instanceof Number){
+                    // 如果故障数量是个数字（说明有效）
+                    int count = (int)value.getValue();
+                    realLength += (count*VALUE_4.intValue());
+                    alarmData.setEngineAlarmCodes(analysisAlarmCodes(value,count));
+                }
+                // 其他故障总数N₄(1字节)
+                realLength +=1;
+                value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+                alarmData.setOtherAlarmCount(value.getValue());
+                // 其他故障代码列表
+                if (value.getValue() instanceof Number){
+                    // 如果故障数量是个数字（说明有效）
+                    int count = (int)value.getValue();
+                    realLength += (count*VALUE_4.intValue());
+                    alarmData.setOtherAlarmCodes(analysisAlarmCodes(value,count));
+                }
+
+                dataUnit.setAlarmData(alarmData);
+                // 数据结束位置
+                int dataEndIndex = dataStartIndex+realLength;
+
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
+
+            }
             default:{
                 // 整车数据
                 return dataUnit;
             }
         }
+    }
+
+
+    /**
+     * 分析报警代码
+     * @param value 检测报警数量后的value
+     * @param count 报警数量
+     * @return 报警代码
+     * */
+    private static List<BigInteger> analysisAlarmCodes(CheckedValue value,int count) {
+        List<BigInteger> codes = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            value =  analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_4.intValue());
+            codes.add((BigInteger) value.getValue());
+        }
+        return codes;
     }
 
 
@@ -876,27 +979,27 @@ public class GBT32960Util {
             if (checkedValue.getEffective()){
                 checkedValue.setValue(bigInteger.longValue());
             }else if (bigInteger.longValue() == 254){
-                checkedValue.setValue("异常");
+                checkedValue.setValue(EXCEPTIONAL);
             }else {
-                checkedValue.setValue("无效");
+                checkedValue.setValue(INVALID);
             }
         }else if (byteCount == 2){
             checkedValue.setEffective(bigInteger.longValue() !=65534&&bigInteger.longValue() !=65535);
             if (checkedValue.getEffective()){
                 checkedValue.setValue(bigInteger.longValue());
             }else if (bigInteger.longValue() == 65534){
-                checkedValue.setValue("异常");
+                checkedValue.setValue(EXCEPTIONAL);
             }else {
-                checkedValue.setValue("无效");
+                checkedValue.setValue(INVALID);
             }
         }else if (byteCount == 4){
             checkedValue.setEffective(bigInteger.longValue() !=4294967294L&&bigInteger.longValue() !=4294967295L);
             if (checkedValue.getEffective()){
                 checkedValue.setValue(bigInteger.longValue());
             }else if (bigInteger.longValue() == 4294967294L){
-                checkedValue.setValue("异常");
+                checkedValue.setValue(EXCEPTIONAL);
             }else {
-                checkedValue.setValue("无效");
+                checkedValue.setValue(INVALID);
             }
         }
         else{
