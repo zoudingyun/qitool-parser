@@ -503,6 +503,25 @@ public class GBT32960Util {
                     return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
+            case 0x09:{
+                // 分析可充电储能装置温度数据
+                if (dataUnit.getBatterySubsystemData()==null){
+                    dataUnit.setBatterySubsystemData(new BatterySubsystemData());
+                }
+                // 获取当前数据包数据数组
+                byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataBytes.length);
+                analysisBatterySubsystemTemperatureData(thisDataBytes,dataUnit.getBatterySubsystemData());
+
+                // 数据结束位置
+                int dataEndIndex = dataStartIndex+dataUnit.getBatterySubsystemData().getSubsystemCountForTemperatureBytesLength();
+
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
+            }
             default:{
                 // 整车数据
                 return dataUnit;
@@ -512,8 +531,66 @@ public class GBT32960Util {
 
 
     /**
+     * 分析可充电储能装置温度数据
+     * @param dataBytes 温度数据报文
+     * @param batterySubsystemData 电池子系统汇总数据
+     * */
+    private static void analysisBatterySubsystemTemperatureData(byte[] dataBytes,BatterySubsystemData batterySubsystemData){
+
+        // 报文长度
+        int realLength = 0;
+        // 可充电储能电压数据子系统个数(1字节)
+        realLength +=1;
+        CheckedValue value = analysisByteData(dataBytes,VALUE_1.intValue());
+        batterySubsystemData.setSubsystemCountForTemperature(value.getValue());
+
+        // 温度数据
+        List<BatterySubsystemTemperatureData> dataList = new ArrayList<>();
+
+        // 子系统温度信息列表
+        if (value.getValue() instanceof Number){
+            // 如果子系统数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            // 子系统电压数据
+            for (int i=0;i<count;i++){
+                BatterySubsystemTemperatureData temperatureData = new BatterySubsystemTemperatureData();
+                // 可充电储能子系统号(1字节)
+                realLength +=1;
+                value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_1.intValue());
+                temperatureData.setSubsystemId(((BigInteger) value.getValue()).intValue());
+                // 可充电储能温度探针个数(2字节)
+                realLength +=2;
+                value = analysisByteData(value.getDataBytes(),VALUE_2.intValue());
+                temperatureData.setProbesCount(value.getValue());
+
+                // 探针温度数据
+                List<BatterySubsystemProbesTemperatureData> probesList = new ArrayList<>();
+                if (temperatureData.getProbesCount() instanceof Number){
+                    // 如果探针数量无误
+                    for (int j=0;j<(int)temperatureData.getProbesCount();j++){
+                        BatterySubsystemProbesTemperatureData probesTemperatureData = new BatterySubsystemProbesTemperatureData();
+                        probesTemperatureData.setProbesId(j);
+
+                        // 温度(每个1字节)
+                        realLength +=1;
+                        value = analysisByteData(value.getDataBytes(),VALUE_1.intValue(),VALUE_1,VALUE_40);
+                        probesTemperatureData.setTemperature(value.getValue());
+
+                        probesList.add(probesTemperatureData);
+                    }
+                }
+                temperatureData.setProbesTemperatureData(probesList);
+                dataList.add(temperatureData);
+            }
+        }
+        batterySubsystemData.setSubsystemCountForTemperatureBytesLength(realLength);
+        batterySubsystemData.setTemperatureData(dataList);
+    }
+
+
+    /**
      * 分析可充电储能装置电压数据
-     * @param dataBytes 报警数据报文
+     * @param dataBytes 电压数据报文
      * @param batterySubsystemData 电池子系统汇总数据
      * */
     private static void analysisBatterySubsystemVoltageData(byte[] dataBytes,BatterySubsystemData batterySubsystemData){

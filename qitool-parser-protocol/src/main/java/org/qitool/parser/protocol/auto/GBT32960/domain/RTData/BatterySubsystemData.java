@@ -35,6 +35,31 @@ public class BatterySubsystemData {
     private List<BatterySubsystemVoltageData> voltageData;
 
 
+    /**
+     * 温度数据报文比特流长度
+     * */
+    public int subsystemCountForTemperatureBytesLength;
+
+    /**
+     * 涉及到温度数据的子系统数
+     * <br>
+     * --------------------------------------------------------
+     * <br>
+     * N个可充电储能子系统，有效值范围：1～250,“0xFE”表示异常，“OxFF”表示无效
+     * */
+    private Object subsystemCountForTemperature;
+
+    /**
+     * 可充电储能子系统 温度信息列表
+     * <br>
+     * --------------------------------------------------------
+     * <br>
+     * 按可充电储能子系统序号依次排列
+     * */
+    private List<BatterySubsystemTemperatureData> temperatureData;
+
+
+
     public Object getSubsystemCountForVoltage() {
         return subsystemCountForVoltage;
     }
@@ -57,5 +82,29 @@ public class BatterySubsystemData {
 
     public void setSubsystemCountForVoltageBytesLength(int subsystemCountForVoltageBytesLength) {
         this.subsystemCountForVoltageBytesLength = subsystemCountForVoltageBytesLength;
+    }
+
+    public int getSubsystemCountForTemperatureBytesLength() {
+        return subsystemCountForTemperatureBytesLength;
+    }
+
+    public void setSubsystemCountForTemperatureBytesLength(int subsystemCountForTemperatureBytesLength) {
+        this.subsystemCountForTemperatureBytesLength = subsystemCountForTemperatureBytesLength;
+    }
+
+    public Object getSubsystemCountForTemperature() {
+        return subsystemCountForTemperature;
+    }
+
+    public void setSubsystemCountForTemperature(Object subsystemCountForTemperature) {
+        this.subsystemCountForTemperature = subsystemCountForTemperature;
+    }
+
+    public List<BatterySubsystemTemperatureData> getTemperatureData() {
+        return temperatureData;
+    }
+
+    public void setTemperatureData(List<BatterySubsystemTemperatureData> temperatureData) {
+        this.temperatureData = temperatureData;
     }
 }
