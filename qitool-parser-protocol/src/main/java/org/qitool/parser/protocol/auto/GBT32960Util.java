@@ -98,6 +98,11 @@ public class GBT32960Util {
      * */
     private static final String INVALID = "无效";
 
+    /**
+     * 起始符
+     * */
+    private static final String HEAD_FLAG = "##";
+
 
 
     /**
@@ -120,6 +125,7 @@ public class GBT32960Util {
         AutoData autoData = new AutoData();
         // 数据校验
         autoData.setBcc(checkData(gbt32960Bytes));
+        autoData.setFlag(HEAD_FLAG);
         // 解析命令单元
         autoData.setCommandUnit(formatCommandUnit(gbt32960Bytes));
         // 解析VIN码
@@ -346,7 +352,7 @@ public class GBT32960Util {
 
                         // ============================================实时信息上报===================================//
                         // 从第7个字节开始时数据位
-                        analysistRealTimeData(dataUnitBytes,6,realTimeData);
+                        analysisRealTimeData(dataUnitBytes,6,realTimeData);
                         dataUnit.setRealTimeData(realTimeData);
                     }
                     default:{
@@ -368,7 +374,7 @@ public class GBT32960Util {
      * @param startBytesIndex 单个信息体起始位置（信息类型标志的位置）
      * @return 格式化后的数据单元
      * */
-    private static DataUnitDataRealTimeData analysistRealTimeData(byte[] dataBytes, int startBytesIndex, DataUnitDataRealTimeData dataUnit){
+    private static DataUnitDataRealTimeData analysisRealTimeData(byte[] dataBytes, int startBytesIndex, DataUnitDataRealTimeData dataUnit){
         // 判断数据类型
         byte[] dataTypeBytes = Arrays.copyOfRange(dataBytes, startBytesIndex, startBytesIndex+1);
         int dataTypeValue = dataTypeBytes[0] & 0xFF;
@@ -387,7 +393,7 @@ public class GBT32960Util {
                 if (dataEndIndex>=dataBytes.length){
                     return dataUnit;
                 }else {
-                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                    return analysisRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
             case 0x02:{
@@ -405,7 +411,7 @@ public class GBT32960Util {
                 if (dataEndIndex>=dataBytes.length){
                     return dataUnit;
                 }else {
-                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                    return analysisRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
             case 0x03:{
@@ -421,7 +427,7 @@ public class GBT32960Util {
                 if (dataEndIndex>=dataBytes.length){
                     return dataUnit;
                 }else {
-                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                    return analysisRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
             case 0x04:{
@@ -435,7 +441,7 @@ public class GBT32960Util {
                 if (dataEndIndex>=dataBytes.length){
                     return dataUnit;
                 }else {
-                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                    return analysisRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
             case 0x05:{
@@ -450,7 +456,7 @@ public class GBT32960Util {
                 if (dataEndIndex>=dataBytes.length){
                     return dataUnit;
                 }else {
-                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                    return analysisRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
             case 0x06:{
@@ -465,7 +471,7 @@ public class GBT32960Util {
                 if (dataEndIndex>=dataBytes.length){
                     return dataUnit;
                 }else {
-                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                    return analysisRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
             case 0x07:{
@@ -480,7 +486,7 @@ public class GBT32960Util {
                 if (dataEndIndex>=dataBytes.length){
                     return dataUnit;
                 }else {
-                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                    return analysisRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
 
             }
@@ -500,7 +506,7 @@ public class GBT32960Util {
                 if (dataEndIndex>=dataBytes.length){
                     return dataUnit;
                 }else {
-                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                    return analysisRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
             case 0x09:{
@@ -519,7 +525,7 @@ public class GBT32960Util {
                 if (dataEndIndex>=dataBytes.length){
                     return dataUnit;
                 }else {
-                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                    return analysisRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
             default:{
