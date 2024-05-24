@@ -12,6 +12,11 @@ import java.util.List;
 public class AlarmData {
 
     /**
+     * 告警数据报文长度
+     * */
+    private int alarmBytesLength;
+
+    /**
      * 告警等级
      * <br>
      * --------------------------------------------------------------
@@ -135,6 +140,14 @@ public class AlarmData {
      * */
     private List<BigInteger> otherAlarmCodes;
 
+
+    public int getAlarmBytesLength() {
+        return alarmBytesLength;
+    }
+
+    public void setAlarmBytesLength(int alarmBytesLength) {
+        this.alarmBytesLength = alarmBytesLength;
+    }
 
     public Object getAlarmLevel() {
         return alarmLevel;

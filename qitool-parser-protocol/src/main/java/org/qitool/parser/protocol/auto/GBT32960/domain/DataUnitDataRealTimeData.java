@@ -42,6 +42,11 @@ public class DataUnitDataRealTimeData extends DataUnitData {
      * */
     private AlarmData alarmData;
 
+    /**
+     * 可充电储能装置数据
+     * */
+    private BatterySubsystemData batterySubsystemData;
+
 
     public AutoStatisticsData getAutoStatisticsData() {
         return autoStatisticsData;
@@ -89,5 +94,13 @@ public class DataUnitDataRealTimeData extends DataUnitData {
 
     public void setAlarmData(AlarmData alarmData) {
         this.alarmData = alarmData;
+    }
+
+    public BatterySubsystemData getBatterySubsystemData() {
+        return batterySubsystemData;
+    }
+
+    public void setBatterySubsystemData(BatterySubsystemData batterySubsystemData) {
+        this.batterySubsystemData = batterySubsystemData;
     }
 }

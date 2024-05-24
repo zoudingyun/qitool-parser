@@ -46,6 +46,12 @@ public class GBT32960Util {
     private static final BigDecimal VALUE_1 = new BigDecimal(1);
 
     /**
+     * 1
+     * */
+    private static final BigDecimal VALUE_2 = new BigDecimal(2);
+
+
+    /**
      * 4
      * */
     private static final BigDecimal VALUE_4 = new BigDecimal(4);
@@ -464,70 +470,11 @@ public class GBT32960Util {
             }
             case 0x07:{
                 // 报警数据
-                // 真实长度
-                int realLength = 0;
                 // 获取当前数据包数据数组
                 byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataBytes.length);
-
-                // 告警数据
-                AlarmData alarmData = new AlarmData();
-                // 告警等级(1字节)
-                realLength +=1;
-                CheckedValue value = analysisByteData(thisDataBytes,VALUE_1.intValue());
-                alarmData.setAlarmLevel(value.getValue());
-                // 通用报警标志(4字节)
-                realLength +=4;
-                AlarmCommonFlag alarmCommonFlag = new AlarmCommonFlag(Arrays.copyOfRange(value.getDataBytes(), 0, VALUE_4.intValue()));
-                value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_4.intValue());
-                alarmData.setAlarmCommonFlag(alarmCommonFlag);
-                // 可充电储能装置故障总数N1(1字节)
-                realLength +=1;
-                value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
-                alarmData.setEnergyStorageAlarmCount(value.getValue());
-                // 可充电储能装置故障代码列表
-                if (value.getValue() instanceof Number){
-                    // 如果故障数量是个数字（说明有效）
-                    int count = (int)value.getValue();
-                    realLength += (count*VALUE_4.intValue());
-                    alarmData.setEnergyStorageAlarmCodes(analysisAlarmCodes(value,count));
-                }
-                // 驱动电机故障总数N₂(1字节)
-                realLength +=1;
-                value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
-                alarmData.setDriveMotorAlarmCount(value.getValue());
-                // 驱动电机故障代码列表
-                if (value.getValue() instanceof Number){
-                    // 如果故障数量是个数字（说明有效）
-                    int count = (int)value.getValue();
-                    realLength += (count*VALUE_4.intValue());
-                    alarmData.setDriveMotorAlarmCodes(analysisAlarmCodes(value,count));
-                }
-                // 发动机故障总数N₃(1字节)
-                realLength +=1;
-                value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
-                alarmData.setEngineAlarmCount(value.getValue());
-                // 发动机故障代码列表
-                if (value.getValue() instanceof Number){
-                    // 如果故障数量是个数字（说明有效）
-                    int count = (int)value.getValue();
-                    realLength += (count*VALUE_4.intValue());
-                    alarmData.setEngineAlarmCodes(analysisAlarmCodes(value,count));
-                }
-                // 其他故障总数N₄(1字节)
-                realLength +=1;
-                value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
-                alarmData.setOtherAlarmCount(value.getValue());
-                // 其他故障代码列表
-                if (value.getValue() instanceof Number){
-                    // 如果故障数量是个数字（说明有效）
-                    int count = (int)value.getValue();
-                    realLength += (count*VALUE_4.intValue());
-                    alarmData.setOtherAlarmCodes(analysisAlarmCodes(value,count));
-                }
-
-                dataUnit.setAlarmData(alarmData);
+                dataUnit.setAlarmData(analysisAlarmData(thisDataBytes));
                 // 数据结束位置
-                int dataEndIndex = dataStartIndex+realLength;
+                int dataEndIndex = dataStartIndex+dataUnit.getAlarmData().getAlarmBytesLength();
 
                 // 递归查询下一波
                 if (dataEndIndex>=dataBytes.length){
@@ -537,11 +484,175 @@ public class GBT32960Util {
                 }
 
             }
+            case 0x08:{
+                // 分析可充电储能装置电压数据
+                if (dataUnit.getBatterySubsystemData()==null){
+                    dataUnit.setBatterySubsystemData(new BatterySubsystemData());
+                }
+                // 获取当前数据包数据数组
+                byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataBytes.length);
+                analysisBatterySubsystemVoltageData(thisDataBytes,dataUnit.getBatterySubsystemData());
+
+                // 数据结束位置
+                int dataEndIndex = dataStartIndex+dataUnit.getBatterySubsystemData().getSubsystemCountForVoltageBytesLength();
+
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
+            }
             default:{
                 // 整车数据
                 return dataUnit;
             }
         }
+    }
+
+
+    /**
+     * 分析可充电储能装置电压数据
+     * @param dataBytes 报警数据报文
+     * @param batterySubsystemData 电池子系统汇总数据
+     * */
+    private static void analysisBatterySubsystemVoltageData(byte[] dataBytes,BatterySubsystemData batterySubsystemData){
+
+        // 报文长度
+        int realLength = 0;
+        // 可充电储能电压数据子系统个数(1字节)
+        realLength +=1;
+        CheckedValue value = analysisByteData(dataBytes,VALUE_1.intValue());
+        batterySubsystemData.setSubsystemCountForVoltage(value.getValue());
+
+        // 电压数据
+        List<BatterySubsystemVoltageData> dataList = new ArrayList<>();
+
+        // 子系统电压信息列表
+        if (value.getValue() instanceof Number){
+            // 如果子系统数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            // 子系统电压数据
+            for (int i=0;i<count;i++){
+                BatterySubsystemVoltageData batterySubsystemVoltageData = new BatterySubsystemVoltageData();
+                // 可充电储能子系统号(1字节)
+                realLength +=1;
+                value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_1.intValue());
+                batterySubsystemVoltageData.setSubsystemId(((BigInteger) value.getValue()).intValue());
+                // 可充电储能装置电压(2字节)
+                realLength +=2;
+                value = analysisByteData(value.getDataBytes(),VALUE_2.intValue(),VALUE_0_1,VALUE_0);
+                batterySubsystemVoltageData.setVoltage(value.getValue());
+
+                // 可充电储能装置电流(2字节)
+                realLength +=2;
+                value = analysisByteData(value.getDataBytes(),VALUE_2.intValue(),VALUE_0_1,VALUE_1000);
+                batterySubsystemVoltageData.setCurrent(value.getValue());
+
+                // 单体电池总数(2字节)
+                realLength +=2;
+                value = analysisByteData(value.getDataBytes(),VALUE_2.intValue());
+                batterySubsystemVoltageData.setCellCount(value.getValue());
+
+                // 本帧起始电池序号(2字节)
+                realLength +=2;
+                value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_2.intValue());
+                batterySubsystemVoltageData.setDatsStartCellId(((BigInteger) value.getValue()).intValue());
+
+                // 本帧单体电池总数(1字节)
+                realLength +=1;
+                value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_1.intValue());
+                batterySubsystemVoltageData.setDataCellCount(((BigInteger) value.getValue()).intValue());
+
+                // 单体电池电压(每个2字节)
+                realLength += (2*batterySubsystemVoltageData.getDataCellCount());
+                List<BatterySubsystemCellVoltageData> voltageDatas = new ArrayList<>(batterySubsystemVoltageData.getDataCellCount());
+                for (int j=0;j<batterySubsystemVoltageData.getDataCellCount();j++){
+                    BatterySubsystemCellVoltageData voltageData = new BatterySubsystemCellVoltageData();
+                    // 单体电池序号
+                    voltageData.setCellId(batterySubsystemVoltageData.getDatsStartCellId()+j);
+                    // 电压
+                    value = analysisByteData(value.getDataBytes(),VALUE_2.intValue(),VALUE_0_001,VALUE_0);
+                    voltageData.setVoltage(value.getValue());
+
+                    voltageDatas.add(voltageData);
+                }
+                batterySubsystemVoltageData.setCellVoltageData(voltageDatas);
+
+
+                dataList.add(batterySubsystemVoltageData);
+            }
+        }
+        batterySubsystemData.setSubsystemCountForVoltageBytesLength(realLength);
+        batterySubsystemData.setVoltageData(dataList);
+    }
+
+
+    /**
+     * 分析报警数据
+     * @param dataBytes 报警数据报文
+     * @return 报警数据
+     * */
+    private static AlarmData analysisAlarmData(byte[] dataBytes){
+        // 报文长度
+        int realLength = 0;
+        // 告警数据
+        AlarmData alarmData = new AlarmData();
+        // 告警等级(1字节)
+        realLength +=1;
+        CheckedValue value = analysisByteData(dataBytes,VALUE_1.intValue());
+        alarmData.setAlarmLevel(value.getValue());
+        // 通用报警标志(4字节)
+        realLength +=4;
+        AlarmCommonFlag alarmCommonFlag = new AlarmCommonFlag(Arrays.copyOfRange(value.getDataBytes(), 0, VALUE_4.intValue()));
+        value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_4.intValue());
+        alarmData.setAlarmCommonFlag(alarmCommonFlag);
+        // 可充电储能装置故障总数N1(1字节)
+        realLength +=1;
+        value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+        alarmData.setEnergyStorageAlarmCount(value.getValue());
+        // 可充电储能装置故障代码列表
+        if (value.getValue() instanceof Number){
+            // 如果故障数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            realLength += (count*VALUE_4.intValue());
+            alarmData.setEnergyStorageAlarmCodes(analysisAlarmCodes(value,count));
+        }
+        // 驱动电机故障总数N₂(1字节)
+        realLength +=1;
+        value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+        alarmData.setDriveMotorAlarmCount(value.getValue());
+        // 驱动电机故障代码列表
+        if (value.getValue() instanceof Number){
+            // 如果故障数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            realLength += (count*VALUE_4.intValue());
+            alarmData.setDriveMotorAlarmCodes(analysisAlarmCodes(value,count));
+        }
+        // 发动机故障总数N₃(1字节)
+        realLength +=1;
+        value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+        alarmData.setEngineAlarmCount(value.getValue());
+        // 发动机故障代码列表
+        if (value.getValue() instanceof Number){
+            // 如果故障数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            realLength += (count*VALUE_4.intValue());
+            alarmData.setEngineAlarmCodes(analysisAlarmCodes(value,count));
+        }
+        // 其他故障总数N₄(1字节)
+        realLength +=1;
+        value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+        alarmData.setOtherAlarmCount(value.getValue());
+        // 其他故障代码列表
+        if (value.getValue() instanceof Number){
+            // 如果故障数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            realLength += (count*VALUE_4.intValue());
+            alarmData.setOtherAlarmCodes(analysisAlarmCodes(value,count));
+        }
+        alarmData.setAlarmBytesLength(realLength);
+        return alarmData;
     }
 
 
