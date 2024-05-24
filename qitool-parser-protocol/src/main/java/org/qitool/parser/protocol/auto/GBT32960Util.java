@@ -8,10 +8,7 @@ import org.qitool.parser.protocol.auto.GBT32960.domain.AutoData;
 import org.qitool.parser.protocol.auto.GBT32960.domain.CommandUnit;
 import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnit;
 import org.qitool.parser.protocol.auto.GBT32960.domain.DataUnitDataRealTimeData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.AutoStatisticsData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.DriveMotorData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.MaxMinData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.PositionData;
+import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.*;
 import org.qitool.parser.protocol.auto.GBT32960.domain.dto.CheckedValue;
 import org.qitool.parser.protocol.auto.GBT32960.enums.*;
 import org.qitool.parser.protocol.auto.GBT32960.exceptions.*;
@@ -49,6 +46,17 @@ public class GBT32960Util {
     private static final BigDecimal VALUE_1 = new BigDecimal(1);
 
     /**
+     * 1
+     * */
+    private static final BigDecimal VALUE_2 = new BigDecimal(2);
+
+
+    /**
+     * 4
+     * */
+    private static final BigDecimal VALUE_4 = new BigDecimal(4);
+
+    /**
      * 40
      * */
     private static final BigDecimal VALUE_40 = new BigDecimal(40);
@@ -79,6 +87,17 @@ public class GBT32960Util {
      * 0.1
      * */
     private static final BigDecimal VALUE_0_1 = new BigDecimal("0.1");
+
+    /**
+     * 异常描述
+     * */
+    private static final String EXCEPTIONAL = "异常";
+
+    /**
+     * 无效描述
+     * */
+    private static final String INVALID = "无效";
+
 
 
     /**
@@ -449,12 +468,284 @@ public class GBT32960Util {
                     return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
                 }
             }
-            case 0x07:
+            case 0x07:{
+                // 报警数据
+                // 获取当前数据包数据数组
+                byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataBytes.length);
+                dataUnit.setAlarmData(analysisAlarmData(thisDataBytes));
+                // 数据结束位置
+                int dataEndIndex = dataStartIndex+dataUnit.getAlarmData().getAlarmBytesLength();
+
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
+
+            }
+            case 0x08:{
+                // 分析可充电储能装置电压数据
+                if (dataUnit.getBatterySubsystemData()==null){
+                    dataUnit.setBatterySubsystemData(new BatterySubsystemData());
+                }
+                // 获取当前数据包数据数组
+                byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataBytes.length);
+                analysisBatterySubsystemVoltageData(thisDataBytes,dataUnit.getBatterySubsystemData());
+
+                // 数据结束位置
+                int dataEndIndex = dataStartIndex+dataUnit.getBatterySubsystemData().getSubsystemCountForVoltageBytesLength();
+
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
+            }
+            case 0x09:{
+                // 分析可充电储能装置温度数据
+                if (dataUnit.getBatterySubsystemData()==null){
+                    dataUnit.setBatterySubsystemData(new BatterySubsystemData());
+                }
+                // 获取当前数据包数据数组
+                byte[] thisDataBytes = Arrays.copyOfRange(dataBytes, dataStartIndex, dataBytes.length);
+                analysisBatterySubsystemTemperatureData(thisDataBytes,dataUnit.getBatterySubsystemData());
+
+                // 数据结束位置
+                int dataEndIndex = dataStartIndex+dataUnit.getBatterySubsystemData().getSubsystemCountForTemperatureBytesLength();
+
+                // 递归查询下一波
+                if (dataEndIndex>=dataBytes.length){
+                    return dataUnit;
+                }else {
+                    return analysistRealTimeData(dataBytes,dataEndIndex,dataUnit);
+                }
+            }
             default:{
                 // 整车数据
                 return dataUnit;
             }
         }
+    }
+
+
+    /**
+     * 分析可充电储能装置温度数据
+     * @param dataBytes 温度数据报文
+     * @param batterySubsystemData 电池子系统汇总数据
+     * */
+    private static void analysisBatterySubsystemTemperatureData(byte[] dataBytes,BatterySubsystemData batterySubsystemData){
+
+        // 报文长度
+        int realLength = 0;
+        // 可充电储能电压数据子系统个数(1字节)
+        realLength +=1;
+        CheckedValue value = analysisByteData(dataBytes,VALUE_1.intValue());
+        batterySubsystemData.setSubsystemCountForTemperature(value.getValue());
+
+        // 温度数据
+        List<BatterySubsystemTemperatureData> dataList = new ArrayList<>();
+
+        // 子系统温度信息列表
+        if (value.getValue() instanceof Number){
+            // 如果子系统数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            // 子系统电压数据
+            for (int i=0;i<count;i++){
+                BatterySubsystemTemperatureData temperatureData = new BatterySubsystemTemperatureData();
+                // 可充电储能子系统号(1字节)
+                realLength +=1;
+                value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_1.intValue());
+                temperatureData.setSubsystemId(((BigInteger) value.getValue()).intValue());
+                // 可充电储能温度探针个数(2字节)
+                realLength +=2;
+                value = analysisByteData(value.getDataBytes(),VALUE_2.intValue());
+                temperatureData.setProbesCount(value.getValue());
+
+                // 探针温度数据
+                List<BatterySubsystemProbesTemperatureData> probesList = new ArrayList<>();
+                if (temperatureData.getProbesCount() instanceof Number){
+                    // 如果探针数量无误
+                    for (int j=0;j<(int)temperatureData.getProbesCount();j++){
+                        BatterySubsystemProbesTemperatureData probesTemperatureData = new BatterySubsystemProbesTemperatureData();
+                        probesTemperatureData.setProbesId(j);
+
+                        // 温度(每个1字节)
+                        realLength +=1;
+                        value = analysisByteData(value.getDataBytes(),VALUE_1.intValue(),VALUE_1,VALUE_40);
+                        probesTemperatureData.setTemperature(value.getValue());
+
+                        probesList.add(probesTemperatureData);
+                    }
+                }
+                temperatureData.setProbesTemperatureData(probesList);
+                dataList.add(temperatureData);
+            }
+        }
+        batterySubsystemData.setSubsystemCountForTemperatureBytesLength(realLength);
+        batterySubsystemData.setTemperatureData(dataList);
+    }
+
+
+    /**
+     * 分析可充电储能装置电压数据
+     * @param dataBytes 电压数据报文
+     * @param batterySubsystemData 电池子系统汇总数据
+     * */
+    private static void analysisBatterySubsystemVoltageData(byte[] dataBytes,BatterySubsystemData batterySubsystemData){
+
+        // 报文长度
+        int realLength = 0;
+        // 可充电储能电压数据子系统个数(1字节)
+        realLength +=1;
+        CheckedValue value = analysisByteData(dataBytes,VALUE_1.intValue());
+        batterySubsystemData.setSubsystemCountForVoltage(value.getValue());
+
+        // 电压数据
+        List<BatterySubsystemVoltageData> dataList = new ArrayList<>();
+
+        // 子系统电压信息列表
+        if (value.getValue() instanceof Number){
+            // 如果子系统数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            // 子系统电压数据
+            for (int i=0;i<count;i++){
+                BatterySubsystemVoltageData batterySubsystemVoltageData = new BatterySubsystemVoltageData();
+                // 可充电储能子系统号(1字节)
+                realLength +=1;
+                value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_1.intValue());
+                batterySubsystemVoltageData.setSubsystemId(((BigInteger) value.getValue()).intValue());
+                // 可充电储能装置电压(2字节)
+                realLength +=2;
+                value = analysisByteData(value.getDataBytes(),VALUE_2.intValue(),VALUE_0_1,VALUE_0);
+                batterySubsystemVoltageData.setVoltage(value.getValue());
+
+                // 可充电储能装置电流(2字节)
+                realLength +=2;
+                value = analysisByteData(value.getDataBytes(),VALUE_2.intValue(),VALUE_0_1,VALUE_1000);
+                batterySubsystemVoltageData.setCurrent(value.getValue());
+
+                // 单体电池总数(2字节)
+                realLength +=2;
+                value = analysisByteData(value.getDataBytes(),VALUE_2.intValue());
+                batterySubsystemVoltageData.setCellCount(value.getValue());
+
+                // 本帧起始电池序号(2字节)
+                realLength +=2;
+                value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_2.intValue());
+                batterySubsystemVoltageData.setDatsStartCellId(((BigInteger) value.getValue()).intValue());
+
+                // 本帧单体电池总数(1字节)
+                realLength +=1;
+                value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_1.intValue());
+                batterySubsystemVoltageData.setDataCellCount(((BigInteger) value.getValue()).intValue());
+
+                // 单体电池电压(每个2字节)
+                realLength += (2*batterySubsystemVoltageData.getDataCellCount());
+                List<BatterySubsystemCellVoltageData> voltageDatas = new ArrayList<>(batterySubsystemVoltageData.getDataCellCount());
+                for (int j=0;j<batterySubsystemVoltageData.getDataCellCount();j++){
+                    BatterySubsystemCellVoltageData voltageData = new BatterySubsystemCellVoltageData();
+                    // 单体电池序号
+                    voltageData.setCellId(batterySubsystemVoltageData.getDatsStartCellId()+j);
+                    // 电压
+                    value = analysisByteData(value.getDataBytes(),VALUE_2.intValue(),VALUE_0_001,VALUE_0);
+                    voltageData.setVoltage(value.getValue());
+
+                    voltageDatas.add(voltageData);
+                }
+                batterySubsystemVoltageData.setCellVoltageData(voltageDatas);
+
+
+                dataList.add(batterySubsystemVoltageData);
+            }
+        }
+        batterySubsystemData.setSubsystemCountForVoltageBytesLength(realLength);
+        batterySubsystemData.setVoltageData(dataList);
+    }
+
+
+    /**
+     * 分析报警数据
+     * @param dataBytes 报警数据报文
+     * @return 报警数据
+     * */
+    private static AlarmData analysisAlarmData(byte[] dataBytes){
+        // 报文长度
+        int realLength = 0;
+        // 告警数据
+        AlarmData alarmData = new AlarmData();
+        // 告警等级(1字节)
+        realLength +=1;
+        CheckedValue value = analysisByteData(dataBytes,VALUE_1.intValue());
+        alarmData.setAlarmLevel(value.getValue());
+        // 通用报警标志(4字节)
+        realLength +=4;
+        AlarmCommonFlag alarmCommonFlag = new AlarmCommonFlag(Arrays.copyOfRange(value.getDataBytes(), 0, VALUE_4.intValue()));
+        value = analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_4.intValue());
+        alarmData.setAlarmCommonFlag(alarmCommonFlag);
+        // 可充电储能装置故障总数N1(1字节)
+        realLength +=1;
+        value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+        alarmData.setEnergyStorageAlarmCount(value.getValue());
+        // 可充电储能装置故障代码列表
+        if (value.getValue() instanceof Number){
+            // 如果故障数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            realLength += (count*VALUE_4.intValue());
+            alarmData.setEnergyStorageAlarmCodes(analysisAlarmCodes(value,count));
+        }
+        // 驱动电机故障总数N₂(1字节)
+        realLength +=1;
+        value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+        alarmData.setDriveMotorAlarmCount(value.getValue());
+        // 驱动电机故障代码列表
+        if (value.getValue() instanceof Number){
+            // 如果故障数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            realLength += (count*VALUE_4.intValue());
+            alarmData.setDriveMotorAlarmCodes(analysisAlarmCodes(value,count));
+        }
+        // 发动机故障总数N₃(1字节)
+        realLength +=1;
+        value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+        alarmData.setEngineAlarmCount(value.getValue());
+        // 发动机故障代码列表
+        if (value.getValue() instanceof Number){
+            // 如果故障数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            realLength += (count*VALUE_4.intValue());
+            alarmData.setEngineAlarmCodes(analysisAlarmCodes(value,count));
+        }
+        // 其他故障总数N₄(1字节)
+        realLength +=1;
+        value = analysisByteData(value.getDataBytes(),VALUE_1.intValue());
+        alarmData.setOtherAlarmCount(value.getValue());
+        // 其他故障代码列表
+        if (value.getValue() instanceof Number){
+            // 如果故障数量是个数字（说明有效）
+            int count = (int)value.getValue();
+            realLength += (count*VALUE_4.intValue());
+            alarmData.setOtherAlarmCodes(analysisAlarmCodes(value,count));
+        }
+        alarmData.setAlarmBytesLength(realLength);
+        return alarmData;
+    }
+
+
+    /**
+     * 分析报警代码
+     * @param value 检测报警数量后的value
+     * @param count 报警数量
+     * @return 报警代码
+     * */
+    private static List<BigInteger> analysisAlarmCodes(CheckedValue value,int count) {
+        List<BigInteger> codes = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            value =  analysisByteDataWithoutDesc(value.getDataBytes(),VALUE_4.intValue());
+            codes.add((BigInteger) value.getValue());
+        }
+        return codes;
     }
 
 
@@ -558,8 +849,8 @@ public class GBT32960Util {
         CheckedValue value = analysisByteData(dataBytes,1);
         driveMotorData.setOrderNumber((int)value.getValue());
         // 驱动电机状态
-        value = analysisByteData(value.getDataBytes(),1);
-        int stateValue = BaseDataTypeUtil.byteToUnsignedBigInteger(dataBytes[startBytesIndex+1]).intValue();
+        value = analysisByteDataWithoutDesc(value.getDataBytes(),1);
+        int stateValue = ((BigInteger) value.getValue()).intValue();
         switch (stateValue){
             case 0x01:{
                 // 耗电
@@ -632,8 +923,8 @@ public class GBT32960Util {
     private static AutoStatisticsData analysistAutoStatisticsData(byte[] dataBytes){
         AutoStatisticsData autoStatisticsData = new AutoStatisticsData();
         // 汽车状态
-        CheckedValue value = analysisByteData(dataBytes,1);
-        int autoStateValue = (int)value.getValue();
+        CheckedValue value = analysisByteDataWithoutDesc(dataBytes,1);
+        int autoStateValue = ((BigInteger) value.getValue()).intValue();
         switch (autoStateValue){
             case 0x01:{
                 // 车辆已启动
@@ -662,8 +953,8 @@ public class GBT32960Util {
             }
         }
         // 充电状态
-        value = analysisByteData(value.getDataBytes(),1);
-        int chargingStateValue =(int) value.getValue();
+        value = analysisByteDataWithoutDesc(value.getDataBytes(),1);
+        int chargingStateValue =((BigInteger) value.getValue()).intValue();
         switch (chargingStateValue){
             case 0x01:{
                 // 停车充电
@@ -697,8 +988,8 @@ public class GBT32960Util {
             }
         }
         // 运行模式
-        value = analysisByteData(value.getDataBytes(),1);
-        int workModeValue = (int)value.getValue();
+        value = analysisByteDataWithoutDesc(value.getDataBytes(),1);
+        int workModeValue = ((BigInteger) value.getValue()).intValue();
         switch (workModeValue){
             case 0x01:{
                 // 纯电
@@ -742,8 +1033,8 @@ public class GBT32960Util {
         value = analysisByteData(value.getDataBytes(),1);
         autoStatisticsData.setSoc(value.getValue());
         // DC/DC 状态
-        value = analysisByteData(value.getDataBytes(),1);
-        int dcDcValue = (int)value.getValue();
+        value = analysisByteDataWithoutDesc(value.getDataBytes(),1);
+        int dcDcValue = ((BigInteger) value.getValue()).intValue();
         switch (dcDcValue){
             case 0x01:{
                 // 工作
@@ -876,27 +1167,27 @@ public class GBT32960Util {
             if (checkedValue.getEffective()){
                 checkedValue.setValue(bigInteger.longValue());
             }else if (bigInteger.longValue() == 254){
-                checkedValue.setValue("异常");
+                checkedValue.setValue(EXCEPTIONAL);
             }else {
-                checkedValue.setValue("无效");
+                checkedValue.setValue(INVALID);
             }
         }else if (byteCount == 2){
             checkedValue.setEffective(bigInteger.longValue() !=65534&&bigInteger.longValue() !=65535);
             if (checkedValue.getEffective()){
                 checkedValue.setValue(bigInteger.longValue());
             }else if (bigInteger.longValue() == 65534){
-                checkedValue.setValue("异常");
+                checkedValue.setValue(EXCEPTIONAL);
             }else {
-                checkedValue.setValue("无效");
+                checkedValue.setValue(INVALID);
             }
         }else if (byteCount == 4){
             checkedValue.setEffective(bigInteger.longValue() !=4294967294L&&bigInteger.longValue() !=4294967295L);
             if (checkedValue.getEffective()){
                 checkedValue.setValue(bigInteger.longValue());
             }else if (bigInteger.longValue() == 4294967294L){
-                checkedValue.setValue("异常");
+                checkedValue.setValue(EXCEPTIONAL);
             }else {
-                checkedValue.setValue("无效");
+                checkedValue.setValue(INVALID);
             }
         }
         else{
@@ -974,6 +1265,24 @@ public class GBT32960Util {
      * */
     private static CheckedValue analysisByteData(byte[] dataBytes,int byteCount){
         return analysisByteData(dataBytes,byteCount,VALUE_1,VALUE_0);
+    }
+
+    /**
+     * 通过字节数分析整型数据值，只做基本数值转换，不分析是否有效
+     * @param dataBytes 数据数组
+     * @param byteCount 本次数据截取长度
+     * @return 转换后的整型数据
+     * */
+    private static CheckedValue analysisByteDataWithoutDesc(byte[] dataBytes,int byteCount){
+        // 本数据报文部分
+        byte[] data = Arrays.copyOfRange(dataBytes, 0, byteCount);
+        // 截取后剩余部分
+        byte[] leaveData =  Arrays.copyOfRange(dataBytes, byteCount, dataBytes.length);
+        // 检查数据
+        CheckedValue checkedValue = checkValueEnable(data);
+        checkedValue.setDataBytes(leaveData);
+        checkedValue.setValue(BaseDataTypeUtil.bytesToUnsignedBigInteger(data));
+        return checkedValue;
     }
 
 

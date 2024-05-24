@@ -1,9 +1,6 @@
 package org.qitool.parser.protocol.auto.GBT32960.domain;
 
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.AutoStatisticsData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.DriveMotorData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.MaxMinData;
-import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.PositionData;
+import org.qitool.parser.protocol.auto.GBT32960.domain.RTData.*;
 
 import java.util.List;
 
@@ -39,6 +36,16 @@ public class DataUnitDataRealTimeData extends DataUnitData {
      * 极值数据
      * */
     private MaxMinData maxMinData;
+
+    /**
+     * 报警数据
+     * */
+    private AlarmData alarmData;
+
+    /**
+     * 可充电储能装置数据
+     * */
+    private BatterySubsystemData batterySubsystemData;
 
 
     public AutoStatisticsData getAutoStatisticsData() {
@@ -79,5 +86,21 @@ public class DataUnitDataRealTimeData extends DataUnitData {
 
     public void setMaxMinData(MaxMinData maxMinData) {
         this.maxMinData = maxMinData;
+    }
+
+    public AlarmData getAlarmData() {
+        return alarmData;
+    }
+
+    public void setAlarmData(AlarmData alarmData) {
+        this.alarmData = alarmData;
+    }
+
+    public BatterySubsystemData getBatterySubsystemData() {
+        return batterySubsystemData;
+    }
+
+    public void setBatterySubsystemData(BatterySubsystemData batterySubsystemData) {
+        this.batterySubsystemData = batterySubsystemData;
     }
 }
