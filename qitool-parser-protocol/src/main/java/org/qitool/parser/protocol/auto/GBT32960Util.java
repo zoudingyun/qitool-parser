@@ -327,7 +327,8 @@ public class GBT32960Util {
         switch (encryptionType){
             case RAW:{
                 switch (commandUnit.getCommandIdentification()){
-                    case UP_REAL_TIME_DATA_REPORT:{
+                    case UP_REAL_TIME_DATA_REPORT:
+                    case UP_REAL_TIME_DATA_COMPLETE:{
                         // 实时信息上报
                         if (commandUnitLength == 0){
                             // 数据长度为0
