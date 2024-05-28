@@ -1223,13 +1223,9 @@ public class GBT32960Util {
      * @param subtractOffset [-]偏移量 (后执行)
      * */
     private static CheckedValue analysisByteData(byte[] dataBytes,int byteCount,BigDecimal multiplyNum,BigDecimal subtractOffset){
-        // 本数据报文部分
-        byte[] data = Arrays.copyOfRange(dataBytes, 0, byteCount);
-        // 截取后剩余部分
-        byte[] leaveData =  Arrays.copyOfRange(dataBytes, byteCount, dataBytes.length);
+
         // 检查数据
-        CheckedValue checkedValue = checkValueEnable(data);
-        checkedValue.setDataBytes(leaveData);
+        CheckedValue checkedValue = createCheckedValue(dataBytes,byteCount,true);
 
         if (checkedValue.getEffective()){
             BigDecimal checkedBigDecimal = new BigDecimal((long)checkedValue.getValue()).multiply(multiplyNum).subtract(subtractOffset);
@@ -1278,17 +1274,40 @@ public class GBT32960Util {
      * 通过字节数分析整型数据值，只做基本数值转换，不分析是否有效
      * @param dataBytes 数据数组
      * @param byteCount 本次数据截取长度
-     * @return 转换后的整型数据
+     * @return 转换后的CheckedValue
      * */
     private static CheckedValue analysisByteDataWithoutDesc(byte[] dataBytes,int byteCount){
+        // 检查数据
+        return createCheckedValue(dataBytes,byteCount,false);
+    }
+
+
+    /**
+     * 解析数据
+     * @param byteCount 需要截取的长度
+     * @param dataBytes 原始数据报文
+     * @param needCheck 是否需要判断有没有效
+     * @return 转换后的CheckedValue
+     * */
+    private static CheckedValue createCheckedValue(byte[] dataBytes,int byteCount,boolean needCheck){
         // 本数据报文部分
         byte[] data = Arrays.copyOfRange(dataBytes, 0, byteCount);
-        // 截取后剩余部分
-        byte[] leaveData =  Arrays.copyOfRange(dataBytes, byteCount, dataBytes.length);
+        // 剩余部分报文
+        byte[] leaveData;
+
+        // 异常部分
+        if (byteCount >= dataBytes.length){
+            leaveData = new byte[0];
+        }else {
+            leaveData = Arrays.copyOfRange(dataBytes, byteCount, dataBytes.length);
+        }
+
         // 检查数据
         CheckedValue checkedValue = checkValueEnable(data);
         checkedValue.setDataBytes(leaveData);
-        checkedValue.setValue(BaseDataTypeUtil.bytesToUnsignedBigInteger(data));
+        if (!needCheck) {
+            checkedValue.setValue(BaseDataTypeUtil.bytesToUnsignedBigInteger(data));
+        }
         return checkedValue;
     }
 
